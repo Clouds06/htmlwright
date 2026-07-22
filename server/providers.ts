@@ -33,12 +33,32 @@ function buildPrompt(task: TaskPackage, fullFileInstruction?: string): string {
   return `你是单文件 HTML 的精确编辑器。只执行用户明确要求的改动，保留所有无关内容、脚本和交互逻辑。\n\n编辑意图：${task.intent}\n范围：${task.scope}\n范围约束：${SCOPE_INSTRUCTIONS[task.scope]}\n当前页 / 内容单元索引：${task.unitIndex ?? "未指定"}\n选中元素：\n${selected}\n\n${fullFileInstruction ?? `完整原文件：\n${task.fullFile}`}\n\n只返回改后的完整 HTML，必须置于 ${START} 和 ${END} 之间。不要解释，不要输出 markdown，不要修改任何文件。`;
 }
 
-function extractHtml(value: string): string {
-  const start = value.indexOf(START);
-  const end = value.lastIndexOf(END);
-  if (start < 0 || end <= start) throw new Error("模型输出缺少 HTML 边界标记");
-  const html = value.slice(start + START.length, end).trim();
-  if (!/<html\b|<!doctype\b/i.test(html)) throw new Error("模型没有返回完整 HTML 文件");
+function stripCodeFence(value: string): string {
+  const trimmed = value.trim();
+  const fence = trimmed.match(/^```[a-zA-Z]*\n([\s\S]*?)\n```$/);
+  return fence ? fence[1].trim() : trimmed;
+}
+
+// Tolerant extraction so weaker / non-Claude models still work: prefer the
+// explicit START/END markers, otherwise fall back to a fenced block or a bare
+// <html>...</html>. Anything that is not a complete, closed document is rejected
+// so it never reaches disk (write-back only happens after verification anyway).
+export function extractHtml(value: string): string {
+  const cleaned = stripCodeFence(value);
+  const start = cleaned.indexOf(START);
+  const end = cleaned.lastIndexOf(END);
+  let html: string;
+  if (start >= 0 && end > start) {
+    html = cleaned.slice(start + START.length, end);
+  } else {
+    const match = cleaned.match(/<!doctype\b[\s\S]*<\/html\s*>/i) || cleaned.match(/<html\b[\s\S]*<\/html\s*>/i);
+    if (!match) throw new Error("Model output contained no complete HTML (no START/END markers and no <html>...</html>)");
+    html = match[0];
+  }
+  html = stripCodeFence(html).trim();
+  if (!/<html\b|<!doctype\b/i.test(html) || !/<\/html\s*>/i.test(html)) {
+    throw new Error("Model did not return a complete, well-closed HTML document");
+  }
   return html;
 }
 
@@ -131,6 +151,43 @@ export class AnthropicAPIProvider implements LLMProvider {
   }
 }
 
+function openaiApiKey(): string | undefined {
+  return process.env.HTMLWRIGHT_OPENAI_API_KEY || process.env.OPENAI_API_KEY || undefined;
+}
+
+function openaiBaseUrl(): string {
+  return (process.env.HTMLWRIGHT_OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
+}
+
+function openaiModel(): string {
+  return process.env.HTMLWRIGHT_OPENAI_MODEL || "gpt-4o";
+}
+
+// Works with any OpenAI Chat Completions compatible endpoint: OpenAI, OpenRouter,
+// Groq, DeepSeek, a local Ollama / LM Studio server, etc. Configured through the
+// HTMLWRIGHT_OPENAI_* env vars (base URL + model + key), or OPENAI_API_KEY.
+export class OpenAICompatibleProvider implements LLMProvider {
+  async status(): Promise<ProviderStatus> {
+    return openaiApiKey()
+      ? { name: "openai-compatible", available: true, message: `OpenAI-compatible endpoint ready (model: ${openaiModel()})` }
+      : { name: "openai-compatible", available: false, message: "Set HTMLWRIGHT_OPENAI_API_KEY (optionally HTMLWRIGHT_OPENAI_BASE_URL / HTMLWRIGHT_OPENAI_MODEL)" };
+  }
+
+  async edit(task: TaskPackage): Promise<ProviderResult> {
+    const key = openaiApiKey();
+    if (!key) throw new Error("HTMLWRIGHT_OPENAI_API_KEY is not set");
+    const response = await fetch(`${openaiBaseUrl()}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model: openaiModel(), max_tokens: 32000, messages: [{ role: "user", content: buildPrompt(task) }] }),
+    });
+    if (!response.ok) throw new Error(`OpenAI-compatible request failed: ${response.status} ${await response.text()}`);
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = data.choices?.[0]?.message?.content || "";
+    return { html: extractHtml(raw), raw };
+  }
+}
+
 export class DemoProvider implements LLMProvider {
   async status(): Promise<ProviderStatus> {
     const available = process.env.HTMLWRIGHT_ENABLE_DEMO === "1" || process.env.NODE_ENV === "test";
@@ -154,6 +211,7 @@ export class DemoProvider implements LLMProvider {
 
 export function createProvider(name: ProviderName): LLMProvider {
   if (name === "anthropic-api") return new AnthropicAPIProvider();
+  if (name === "openai-compatible") return new OpenAICompatibleProvider();
   if (name === "demo") return new DemoProvider();
   return new ClaudeCodeProvider();
 }

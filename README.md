@@ -15,7 +15,7 @@ you review the code diff and a visual check.
 - macOS
 - Node.js >= 20.11
 - One of Google Chrome / Chromium / Microsoft Edge
-- The Claude Code CLI (signed in), or an `ANTHROPIC_API_KEY` to call the Anthropic API directly
+- A model backend — any one of: the Claude Code CLI (signed in), an `ANTHROPIC_API_KEY`, or any OpenAI-compatible endpoint (OpenAI / OpenRouter / local Ollama, via `HTMLWRIGHT_OPENAI_API_KEY`)
 
 ## How it works
 
@@ -116,6 +116,9 @@ Environment variables (all optional) — see [`.env.example`](./.env.example):
 |----------|---------|
 | `ANTHROPIC_API_KEY` | enable the Anthropic API provider |
 | `HTMLWRIGHT_MODEL` | model id for the Anthropic API provider (default `claude-sonnet-4-5`) |
+| `HTMLWRIGHT_OPENAI_API_KEY` | enable the OpenAI-compatible provider (or reuse `OPENAI_API_KEY`) |
+| `HTMLWRIGHT_OPENAI_BASE_URL` | OpenAI-compatible base URL (default `https://api.openai.com/v1`; e.g. OpenRouter, local Ollama) |
+| `HTMLWRIGHT_OPENAI_MODEL` | model id for the OpenAI-compatible provider (default `gpt-4o`) |
 | `HTMLWRIGHT_CLAUDE_EXECUTABLE` | path to the Claude Code executable |
 | `HTMLWRIGHT_CONFIG_FILE` | override the config file location |
 | `HTMLWRIGHT_ENABLE_DEMO` | set to `1` to enable the demo provider (no model call) |

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 
 type Scope = "element" | "unit" | "page" | "document";
-type ProviderName = "claude-code" | "anthropic-api" | "demo";
+type ProviderName = "claude-code" | "anthropic-api" | "openai-compatible" | "demo";
 
 interface ProviderStatus { name: ProviderName; available: boolean; message: string }
 interface ElementSummary { id?: string; tag: string; classes: string[]; text: string; outerHTML: string; breadcrumb?: string; unitIndex?: number }
@@ -20,7 +20,7 @@ interface AppState {
   file: { name: string; path: string }; pending?: PendingEdit; conflict: boolean; canUndo: boolean; providers: ProviderStatus[]; inPlace: boolean; apiToken: string; previewUrl: string;
 }
 
-const providerLabel: Record<ProviderName, string> = { "claude-code": "Claude Code", "anthropic-api": "Anthropic API", demo: "本地演示" };
+const providerLabel: Record<ProviderName, string> = { "claude-code": "Claude Code", "anthropic-api": "Anthropic API", "openai-compatible": "OpenAI-compatible", demo: "本地演示" };
 const scopeOptions: Array<{ value: Scope; label: string; title: string }> = [
   { value: "element", label: "元素", title: "只修改当前选中的元素" },
   { value: "unit", label: "当前单元", title: "只修改元素所在的内容单元" },

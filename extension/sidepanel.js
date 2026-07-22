@@ -2,6 +2,7 @@ const HOST_NAME = 'com.htmlwright.native';
 const providerLabels = {
   'claude-code': 'Claude Code',
   'anthropic-api': 'Anthropic API',
+  'openai-compatible': 'OpenAI-compatible',
   demo: '本地演示',
 };
 const scopeLabels = {

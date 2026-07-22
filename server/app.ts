@@ -33,7 +33,7 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
   const app: Express = express();
   const apiToken = randomBytes(24).toString("base64url");
   const clients = new Set<Response>();
-  const providerNames: ProviderName[] = ["claude-code", "anthropic-api", "demo"];
+  const providerNames: ProviderName[] = ["claude-code", "anthropic-api", "openai-compatible", "demo"];
   let providerStatuses: ProviderStatus[] = providerNames.map(name => ({ name, available: false, message: "正在检查" }));
   Promise.all(providerNames.map(name => createProvider(name).status())).then(statuses => {
     providerStatuses = statuses;

@@ -12,7 +12,7 @@ import type { EditRequest, ProviderName, ProviderStatus, QuickEditRequest, Verif
 const MAX_INBOUND_BYTES = 64 * 1024 * 1024;
 const MAX_OUTBOUND_BYTES = 1024 * 1024;
 const DIFF_LIMIT = 240_000;
-const providerNames: ProviderName[] = ["claude-code", "anthropic-api", "demo"];
+const providerNames: ProviderName[] = ["claude-code", "anthropic-api", "openai-compatible", "demo"];
 const configFile = process.env.HTMLWRIGHT_CONFIG_FILE
   || path.join(homedir(), "Library", "Application Support", "htmlwright", "config.json");
 
@@ -36,8 +36,16 @@ function expandHome(value: string): string {
 
 async function loadConfiguration(): Promise<void> {
   try {
-    const stored = JSON.parse(await readFile(configFile, "utf8")) as { claudeExecutable?: string };
+    const stored = JSON.parse(await readFile(configFile, "utf8")) as {
+      claudeExecutable?: string;
+      openaiApiKey?: string;
+      openaiBaseUrl?: string;
+      openaiModel?: string;
+    };
     if (stored.claudeExecutable) process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE = stored.claudeExecutable;
+    if (stored.openaiApiKey) process.env.HTMLWRIGHT_OPENAI_API_KEY ||= stored.openaiApiKey;
+    if (stored.openaiBaseUrl) process.env.HTMLWRIGHT_OPENAI_BASE_URL ||= stored.openaiBaseUrl;
+    if (stored.openaiModel) process.env.HTMLWRIGHT_OPENAI_MODEL ||= stored.openaiModel;
   } catch { /* use installer environment or default path */ }
   process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE ||= path.join(homedir(), ".local", "bin", "claude");
 }

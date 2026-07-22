@@ -1,5 +1,5 @@
 export type Scope = "element" | "unit" | "page" | "document";
-export type ProviderName = "claude-code" | "anthropic-api" | "demo";
+export type ProviderName = "claude-code" | "anthropic-api" | "openai-compatible" | "demo";
 
 export interface ElementSummary {
   id?: string;

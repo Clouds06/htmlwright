@@ -11,7 +11,7 @@
 - macOS
 - Node.js >= 20.11
 - Google Chrome / Chromium / Microsoft Edge 之一
-- 本机 Claude Code CLI（已登录），或设置 `ANTHROPIC_API_KEY` 直连 Anthropic API
+- 模型后端任选其一：本机 Claude Code CLI（已登录）、`ANTHROPIC_API_KEY` 直连 Anthropic、或任意 OpenAI 兼容端点（OpenAI / OpenRouter / 本地 Ollama，设 `HTMLWRIGHT_OPENAI_API_KEY`）
 
 ## 本地开发
 
