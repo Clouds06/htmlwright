@@ -62,13 +62,33 @@ test("native host opens only local HTML files and returns compact state", async 
     assert.equal(opened.result?.file?.path, filePath);
     assert.equal(opened.result?.providers?.find(provider => provider.name === "demo")?.available, true);
 
-    const invalidExecutable = await exchange(child, {
-      id: "bad-config",
+    // A non-executable Claude path no longer hard-fails configure (an OpenAI-only
+    // user must not be blocked by it); claude-code just reports itself unavailable.
+    const missingClaude = await exchange(child, {
+      id: "missing-claude",
       action: "configure",
       payload: { claudeExecutable: path.join(directory, "missing-claude") },
     });
-    assert.equal(invalidExecutable.ok, false);
-    assert.match(invalidExecutable.error || "", /无法执行/);
+    assert.equal(missingClaude.ok, true);
+    assert.equal(missingClaude.result?.providers?.find(provider => provider.name === "claude-code")?.available, false);
+
+    // A relative Claude path is still rejected outright.
+    const relativeClaude = await exchange(child, {
+      id: "relative-claude",
+      action: "configure",
+      payload: { claudeExecutable: "not/absolute" },
+    });
+    assert.equal(relativeClaude.ok, false);
+
+    // Configuring an OpenAI-compatible backend alone is enough to get a provider.
+    const openaiConfigured = await exchange(child, {
+      id: "config-openai",
+      action: "configure",
+      payload: { openaiApiKey: "test-key", openaiModel: "test-model" },
+    });
+    assert.equal(openaiConfigured.ok, true);
+    assert.equal(openaiConfigured.result?.providers?.find(provider => provider.name === "openai-compatible")?.available, true);
+    assert.equal(JSON.parse(await readFile(configFile, "utf8")).openaiApiKey, "test-key");
 
     const configured = await exchange(child, {
       id: "config",

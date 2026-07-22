@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
-import { constants } from "node:fs";
-import { access, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -50,17 +49,44 @@ async function loadConfiguration(): Promise<void> {
   process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE ||= path.join(homedir(), ".local", "bin", "claude");
 }
 
-async function configureClaude(value: unknown): Promise<void> {
-  if (typeof value !== "string" || !value.trim()) throw new Error("请输入 Claude Code 可执行文件路径");
-  const expanded = expandHome(value.trim());
-  if (!path.isAbsolute(expanded)) throw new Error("Claude Code 路径必须是绝对路径，或以 ~/ 开头");
-  const executable = path.normalize(expanded);
-  await access(executable, constants.X_OK).catch(() => {
-    throw new Error(`无法执行该文件：${executable}`);
-  });
-  process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE = executable;
+interface StoredSettings {
+  claudeExecutable?: string;
+  openaiApiKey?: string;
+  openaiBaseUrl?: string;
+  openaiModel?: string;
+}
+
+async function readStoredSettings(): Promise<StoredSettings> {
+  try { return JSON.parse(await readFile(configFile, "utf8")) as StoredSettings; }
+  catch { return {}; }
+}
+
+function applyEnv(name: string, value?: string): void {
+  if (value) process.env[name] = value;
+  else delete process.env[name];
+}
+
+async function configure(payload: Record<string, unknown> = {}): Promise<void> {
+  const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+  const settings = await readStoredSettings();
+
+  const claude = text(payload.claudeExecutable);
+  if (claude) {
+    const expanded = path.normalize(expandHome(claude));
+    if (!path.isAbsolute(expanded)) throw new Error("Claude Code 路径必须是绝对路径，或以 ~/ 开头");
+    settings.claudeExecutable = expanded;
+    process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE = expanded;
+  }
+
+  settings.openaiApiKey = text(payload.openaiApiKey) || undefined;
+  settings.openaiBaseUrl = text(payload.openaiBaseUrl) || undefined;
+  settings.openaiModel = text(payload.openaiModel) || undefined;
+  applyEnv("HTMLWRIGHT_OPENAI_API_KEY", settings.openaiApiKey);
+  applyEnv("HTMLWRIGHT_OPENAI_BASE_URL", settings.openaiBaseUrl);
+  applyEnv("HTMLWRIGHT_OPENAI_MODEL", settings.openaiModel);
+
   await mkdir(path.dirname(configFile), { recursive: true });
-  await writeFile(configFile, `${JSON.stringify({ claudeExecutable: executable }, null, 2)}\n`, "utf8");
+  await writeFile(configFile, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
 }
 
 function send(message: unknown): void {
@@ -114,6 +140,9 @@ async function statePayload() {
     settings: {
       claudeExecutable: process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE,
       defaultClaudeExecutable: path.join(homedir(), ".local", "bin", "claude"),
+      openaiApiKey: process.env.HTMLWRIGHT_OPENAI_API_KEY,
+      openaiBaseUrl: process.env.HTMLWRIGHT_OPENAI_BASE_URL,
+      openaiModel: process.env.HTMLWRIGHT_OPENAI_MODEL,
     },
   };
 }
@@ -130,7 +159,7 @@ function resolveHtmlFile(fileUrl: unknown): string {
 async function handle(request: NativeRequest) {
   if (!request?.id || !request.action) throw new Error("Native Messaging 请求格式无效");
   if (request.action === "configure") {
-    await configureClaude(request.payload?.claudeExecutable);
+    await configure(request.payload ?? {});
     providerStatuses = await Promise.all(providerNames.map(name => createProvider(name).status()));
     return statePayload();
   }

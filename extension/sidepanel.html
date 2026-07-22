@@ -10,94 +10,120 @@
     <main class="panel-shell">
       <header class="topbar">
         <span class="brand-mark">H</span>
-        <div><strong>htmlwright</strong><small id="file-name">等待本地 Helper</small></div>
+        <div class="topbar-id"><strong>htmlwright</strong><small id="file-name">等待本地 Helper</small></div>
         <span id="connection-badge" class="connection offline">未连接</span>
       </header>
 
-      <section id="connection-panel" class="connection-panel">
-        <label id="source-label" for="base-url">本地 Helper 地址</label>
-        <div class="connection-row">
-          <input id="base-url" value="http://localhost:4178" spellcheck="false">
-          <button id="connect-button" class="secondary-button">连接</button>
-        </div>
-        <button id="open-preview-button" class="wide-button">打开本地 HTML 预览</button>
-        <p id="native-hint" class="native-hint hidden">当前文件已通过 Native Host 连接，无需启动 localhost 服务。</p>
-      </section>
-
-      <section class="edit-panel">
-        <div class="section-heading"><span>EDIT</span><strong>描述改动</strong></div>
-        <div id="selection-summary" class="selection-summary empty">
-          <span class="tag">—</span>
-          <div><strong>尚未选择元素</strong><small>可直接修改整页或整个 HTML</small></div>
-        </div>
-        <div id="quick-edit-panel" class="quick-edit-panel hidden">
-          <div class="quick-edit-heading"><strong>快速编辑</strong><span>无需 AI</span></div>
-          <textarea id="quick-text" rows="2" placeholder="所选元素包含子元素，请使用 AI 修改文字"></textarea>
-          <div class="quick-style-row">
-            <label>文字色<input id="quick-color" type="color" value="#202522"></label>
-            <label>背景色<input id="quick-background" type="color" value="#ffffff"></label>
-            <label>字号<input id="quick-font-size" type="number" min="6" max="200" step="1"><span>px</span></label>
-            <button id="quick-apply-button" type="button">应用</button>
+      <div class="scroll-area">
+        <section id="connection-panel" class="card connection-panel">
+          <div class="card-head"><span class="eyebrow">连接</span></div>
+          <label id="source-label" for="base-url">本地 Helper 地址</label>
+          <div class="connection-row">
+            <input id="base-url" value="http://localhost:4178" spellcheck="false">
+            <button id="connect-button" class="btn btn-ghost">连接</button>
           </div>
-        </div>
-        <div id="scope-control" class="scope-control" aria-label="编辑范围">
-          <button data-scope="element" disabled>元素</button>
-          <button data-scope="unit">当前单元</button>
-          <button data-scope="page">整页</button>
-          <button data-scope="document" class="active">整个 HTML</button>
-        </div>
-        <div id="intent-target" class="intent-target">本次意见 → 整个 HTML</div>
-        <textarea id="intent" rows="6" placeholder="例如：统一所有页面的字体、背景和强调色"></textarea>
-        <div class="provider-row">
-          <label for="provider">AI 后端</label>
-          <div class="provider-controls">
-            <select id="provider"></select>
-            <button id="claude-settings-button" class="icon-button hidden" type="button" title="设置 Claude Code 路径" aria-label="设置 Claude Code 路径">⚙</button>
-          </div>
-        </div>
-        <button id="generate-button" class="primary-button" disabled>生成候选改动</button>
-        <div id="generation-queue" class="generation-queue hidden" aria-live="polite">
-          <div class="generation-queue-heading"><strong>生成队列</strong><span id="generation-queue-count"></span></div>
-          <ol id="generation-queue-list"></ol>
-        </div>
-        <p id="message" class="message" role="status"></p>
-      </section>
+          <button id="open-preview-button" class="btn btn-outline btn-block">打开本地 HTML 预览</button>
+          <p id="native-hint" class="hint hidden">已通过 Native Host 连接当前文件，无需启动 localhost 服务。</p>
+        </section>
 
-      <section class="review-panel">
-        <div class="review-heading"><strong>候选审核</strong><span id="verification-status">等待改动</span></div>
-        <div id="empty-review" class="empty-review">生成后将在这里显示验证结果和代码差异。</div>
-        <div id="review-content" class="review-content hidden">
-          <section class="change-log" aria-labelledby="change-log-title">
-            <div class="change-log-heading"><strong id="change-log-title">当前候选包含</strong><span id="change-count"></span></div>
-            <ol id="change-list"></ol>
-          </section>
-          <div id="checks" class="checks"></div>
-          <details id="diff-details" class="diff-details">
-            <summary>查看代码差异</summary>
-            <pre id="diff"></pre>
-          </details>
-        </div>
-      </section>
+        <section class="card edit-panel">
+          <div class="card-head"><span class="eyebrow">编辑</span><h2>描述改动</h2></div>
+          <div id="selection-summary" class="selection-summary empty">
+            <span class="tag">—</span>
+            <div><strong>尚未选择元素</strong><small>可直接修改整页或整个 HTML</small></div>
+          </div>
+          <div id="quick-edit-panel" class="quick-edit-panel hidden">
+            <div class="subhead"><strong>快速编辑</strong><span class="pill-tag">无需 AI</span></div>
+            <textarea id="quick-text" rows="2" placeholder="所选元素包含子元素，请使用 AI 修改文字"></textarea>
+            <div class="quick-style-row">
+              <label>文字色<input id="quick-color" type="color" value="#202522"></label>
+              <label>背景色<input id="quick-background" type="color" value="#ffffff"></label>
+              <label>字号<input id="quick-font-size" type="number" min="6" max="200" step="1"><span>px</span></label>
+              <button id="quick-apply-button" type="button" class="btn btn-ghost">应用</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">编辑范围</span>
+            <div id="scope-control" class="scope-control" aria-label="编辑范围">
+              <button data-scope="element" disabled>元素</button>
+              <button data-scope="unit">当前单元</button>
+              <button data-scope="page">整页</button>
+              <button data-scope="document" class="active">整个 HTML</button>
+            </div>
+          </div>
+          <div id="intent-target" class="intent-target">本次意见 → 整个 HTML</div>
+          <textarea id="intent" rows="5" placeholder="例如：统一所有页面的字体、背景和强调色"></textarea>
+          <div class="provider-row">
+            <label for="provider">AI 后端</label>
+            <div class="provider-controls">
+              <select id="provider"></select>
+              <button id="claude-settings-button" class="icon-btn hidden" type="button" title="AI 后端设置" aria-label="AI 后端设置">⚙</button>
+            </div>
+          </div>
+          <button id="generate-button" class="btn btn-primary btn-block" disabled>生成候选改动</button>
+          <div id="generation-queue" class="generation-queue hidden" aria-live="polite">
+            <div class="subhead"><strong>生成队列</strong><span id="generation-queue-count"></span></div>
+            <ol id="generation-queue-list"></ol>
+          </div>
+          <p id="message" class="message" role="status"></p>
+        </section>
+
+        <section class="card review-panel">
+          <div class="card-head"><span class="eyebrow">审核</span><h2>候选改动</h2><span id="verification-status" class="status-chip">等待改动</span></div>
+          <div id="empty-review" class="empty-review">生成后将在这里显示验证结果和代码差异。</div>
+          <div id="review-content" class="review-content hidden">
+            <section class="change-log" aria-labelledby="change-log-title">
+              <div class="subhead"><strong id="change-log-title">当前候选包含</strong><span id="change-count"></span></div>
+              <ol id="change-list"></ol>
+            </section>
+            <div id="checks" class="checks"></div>
+            <details id="diff-details" class="diff-details">
+              <summary>查看代码差异</summary>
+              <pre id="diff"></pre>
+            </details>
+          </div>
+        </section>
+      </div>
 
       <footer class="action-bar">
-        <button id="reject-button" class="danger-button" disabled>拒绝</button>
-        <button id="undo-button" class="secondary-button" disabled>撤销</button>
-        <button id="accept-button" class="accept-button" disabled>接受并写回</button>
+        <button id="reject-button" class="btn btn-danger" disabled>拒绝</button>
+        <button id="undo-button" class="btn btn-outline" disabled>撤销</button>
+        <button id="accept-button" class="btn btn-primary" disabled>接受并写回</button>
       </footer>
     </main>
+
     <dialog id="claude-dialog" aria-labelledby="claude-dialog-title">
       <form id="claude-form">
         <div class="dialog-heading">
-          <div><small>CLAUDE CODE</small><strong id="claude-dialog-title">设置可执行文件</strong></div>
-          <button id="claude-close-button" class="icon-button" type="button" title="关闭" aria-label="关闭">×</button>
+          <div><span class="eyebrow">设置</span><strong id="claude-dialog-title">AI 后端设置</strong></div>
+          <button id="claude-close-button" class="icon-btn" type="button" title="关闭" aria-label="关闭">×</button>
         </div>
-        <p>未能自动连接 Claude Code。请选择本机的 <code>claude</code> 可执行文件路径。</p>
-        <label for="claude-path">Claude Code 路径</label>
-        <input id="claude-path" spellcheck="false" autocomplete="off">
+
+        <div class="settings-group">
+          <div class="settings-group-head">Claude Code · 订阅，零配置</div>
+          <label for="claude-path">可执行文件路径</label>
+          <input id="claude-path" spellcheck="false" autocomplete="off" placeholder="~/.local/bin/claude">
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-group-head">OpenAI 兼容 · 用自己的 Key</div>
+          <div class="preset-row" id="openai-presets">
+            <button type="button" class="chip" data-base="https://api.openai.com/v1" data-model="gpt-4o">OpenAI</button>
+            <button type="button" class="chip" data-base="https://openrouter.ai/api/v1" data-model="anthropic/claude-sonnet-4-5">OpenRouter</button>
+            <button type="button" class="chip" data-base="http://localhost:11434/v1" data-model="llama3.1">本地 Ollama</button>
+          </div>
+          <label for="openai-key">API Key</label>
+          <input id="openai-key" type="password" spellcheck="false" autocomplete="off" placeholder="sk-…（本地 Ollama 随便填）">
+          <label for="openai-base">Base URL</label>
+          <input id="openai-base" spellcheck="false" autocomplete="off" placeholder="https://api.openai.com/v1">
+          <label for="openai-model">模型</label>
+          <input id="openai-model" spellcheck="false" autocomplete="off" placeholder="gpt-4o">
+        </div>
+
         <p id="claude-dialog-message" class="dialog-message" role="status"></p>
         <div class="dialog-actions">
-          <button id="claude-cancel-button" class="secondary-button" type="button">取消</button>
-          <button id="claude-save-button" class="accept-button" type="submit">保存并检测</button>
+          <button id="claude-cancel-button" class="btn btn-outline" type="button">取消</button>
+          <button id="claude-save-button" class="btn btn-primary" type="submit">保存</button>
         </div>
       </form>
     </dialog>

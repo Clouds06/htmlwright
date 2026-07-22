@@ -40,6 +40,10 @@ const elements = {
   claudeCloseButton: document.querySelector('#claude-close-button'),
   claudeCancelButton: document.querySelector('#claude-cancel-button'),
   claudeSaveButton: document.querySelector('#claude-save-button'),
+  openaiKey: document.querySelector('#openai-key'),
+  openaiBase: document.querySelector('#openai-base'),
+  openaiModel: document.querySelector('#openai-model'),
+  openaiPresets: document.querySelector('#openai-presets'),
   generateButton: document.querySelector('#generate-button'),
   generationQueue: document.querySelector('#generation-queue'),
   generationQueueCount: document.querySelector('#generation-queue-count'),
@@ -391,10 +395,12 @@ function renderState() {
 function openClaudeDialog(automatic = false) {
   if (transport !== 'native' || !appState) return;
   claudeDialogPrompted = true;
-  elements.claudePath.value = appState.settings?.claudeExecutable
-    || appState.settings?.defaultClaudeExecutable
-    || '~/.local/bin/claude';
-  elements.claudeDialogMessage.textContent = automatic ? '自动检测失败，请确认路径。' : '';
+  const settings = appState.settings || {};
+  elements.claudePath.value = settings.claudeExecutable || settings.defaultClaudeExecutable || '~/.local/bin/claude';
+  elements.openaiKey.value = settings.openaiApiKey || '';
+  elements.openaiBase.value = settings.openaiBaseUrl || '';
+  elements.openaiModel.value = settings.openaiModel || '';
+  elements.claudeDialogMessage.textContent = automatic ? '未检测到可用后端。设置 Claude 路径，或填入任一 OpenAI 兼容后端。' : '';
   if (!elements.claudeDialog.open) elements.claudeDialog.showModal();
 }
 
@@ -404,15 +410,20 @@ function closeClaudeDialog() {
 
 async function saveClaudeConfiguration(event) {
   event.preventDefault();
-  const claudeExecutable = elements.claudePath.value.trim();
-  elements.claudeDialogMessage.textContent = '正在检测…';
+  const settings = {
+    claudeExecutable: elements.claudePath.value.trim(),
+    openaiApiKey: elements.openaiKey.value.trim(),
+    openaiBaseUrl: elements.openaiBase.value.trim(),
+    openaiModel: elements.openaiModel.value.trim(),
+  };
+  elements.claudeDialogMessage.textContent = '正在保存并检测…';
   elements.claudeSaveButton.disabled = true;
   try {
-    appState = await nativeRequest('configure', { claudeExecutable });
-    const claudeStatus = appState.providers?.find(provider => provider.name === 'claude-code');
-    if (!claudeStatus?.available) throw new Error(claudeStatus?.message || 'Claude Code 不可用');
+    appState = await nativeRequest('configure', settings);
+    const available = (appState.providers || []).filter(provider => provider.available).map(provider => providerLabels[provider.name] || provider.name);
+    if (!available.length) throw new Error('仍没有可用的 AI 后端，请检查 Claude 路径或 OpenAI Key');
     closeClaudeDialog();
-    setMessage('Claude Code 路径已保存并验证', 'success');
+    setMessage(`已保存，可用后端：${available.join('、')}`, 'success');
   } catch (error) {
     elements.claudeDialogMessage.textContent = error.message;
   } finally {
@@ -610,6 +621,13 @@ elements.claudeSettingsButton.addEventListener('click', () => openClaudeDialog()
 elements.claudeCloseButton.addEventListener('click', closeClaudeDialog);
 elements.claudeCancelButton.addEventListener('click', closeClaudeDialog);
 elements.claudeForm.addEventListener('submit', saveClaudeConfiguration);
+elements.openaiPresets.addEventListener('click', event => {
+  const chip = event.target.closest('[data-base]');
+  if (!chip) return;
+  elements.openaiBase.value = chip.dataset.base;
+  elements.openaiModel.value = chip.dataset.model;
+  elements.openaiKey.focus();
+});
 elements.generateButton.addEventListener('click', enqueueGeneration);
 elements.acceptButton.addEventListener('click', () => perform('接受并写回', '/api/accept'));
 elements.rejectButton.addEventListener('click', () => perform('拒绝候选', '/api/reject'));
