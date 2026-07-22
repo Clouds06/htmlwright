@@ -51,6 +51,14 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
     clients.forEach(client => client.write(data));
   }
 
+  const allowedHosts = new Set([`localhost:${options.port}`, `127.0.0.1:${options.port}`]);
+  app.use((request, response, next) => {
+    if (request.headers.host && !allowedHosts.has(request.headers.host)) {
+      response.status(403).json({ error: "Rejected unexpected Host header (DNS-rebinding guard)" });
+      return;
+    }
+    next();
+  });
   app.use(express.json({ limit: "50mb" }));
   app.use("/api", (request, response, next) => {
     if (request.method !== "GET" && request.header("x-htmlwright-token") !== apiToken) {
