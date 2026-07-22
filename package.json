@@ -1,0 +1,59 @@
+{
+  "name": "htmlwright",
+  "version": "0.1.0",
+  "description": "A local AI-native visual editor for single-file HTML documents.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "htmlwright": "dist/server/cli.js",
+    "htmlwright-native": "dist/server/native-host.js",
+    "htmlwright-install-native": "scripts/install-native-host.mjs",
+    "htmlwright-uninstall-native": "scripts/uninstall-native-host.mjs"
+  },
+  "files": [
+    "dist",
+    "extension",
+    "scripts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "HTMLWRIGHT_ENABLE_DEMO=1 tsx server/cli.ts sample/report.html --port 4178 --no-open --dev",
+    "build": "npm run typecheck && vite build && tsup",
+    "start": "node dist/server/cli.js sample/report.html --no-open",
+    "native:install": "npm run build && node scripts/install-native-host.mjs",
+    "native:uninstall": "node scripts/uninstall-native-host.mjs",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run extension:check && npm run build",
+    "extension:check": "node --test tests/extension.test.mjs"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "diff": "^8.0.2",
+    "express": "^5.1.0",
+    "lucide-react": "^0.468.0",
+    "parse5": "^8.0.1",
+    "pixelmatch": "^7.1.0",
+    "playwright-core": "^1.54.1",
+    "pngjs": "^7.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.19.0",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.2"
+  }
+}

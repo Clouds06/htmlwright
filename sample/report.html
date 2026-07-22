@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>产品季度复盘</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef5fc; color: #202522; font: 16px/1.6 Arial, sans-serif; }
+    main { width: min(1080px, calc(100% - 48px)); margin: 40px auto; }
+    section { min-height: 640px; margin: 0 0 28px; padding: 64px; background: white; box-shadow: 0 12px 38px rgba(23,30,26,.08); }
+    .kicker { margin: 0 0 18px; color: #db5d2e; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { max-width: 740px; margin: 0; font-size: 58px; line-height: 1.05; }
+    h2 { margin: 0 0 32px; font-size: 38px; line-height: 1.15; }
+    .lead { max-width: 680px; margin-top: 30px; color: #59615c; font-size: 21px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 72px; }
+    .metric { border-top: 3px solid #1b7051; padding-top: 18px; }
+    .metric strong { display: block; font-size: 34px; }
+    .metric span { color: #6c746f; }
+    .columns { display: grid; grid-template-columns: 1.1fr .9fr; gap: 64px; }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 14px; }
+    .quote { padding: 28px; background: #f1f5f2; border-left: 4px solid #1b7051; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <main>
+    <section style="background: linear-gradient(150deg, #0f2a22 0%, #17493a 55%, #1b7051 100%); color: #f1f5f2;">
+      <p class="kicker" style="color: #ff8a5c;">2026 Q2 REVIEW</p>
+      <h1>让复杂工作流变得清晰、可靠、可验证</h1>
+      <p class="lead" style="color: #cdd8d2;">本季度我们围绕编辑效率与结果可信度完成了三项关键改进。</p>
+      <div class="metrics">
+        <div class="metric" style="border-top-color: #7fe3bf;"><strong>42%</strong><span style="color: #b9c7c0;">任务完成时间降低</span></div>
+        <div class="metric" style="border-top-color: #7fe3bf;"><strong>3.4×</strong><span style="color: #b9c7c0;">高质量迭代增长</span></div>
+        <div class="metric" style="border-top-color: #7fe3bf;"><strong>91%</strong><span style="color: #b9c7c0;">用户接受率</span></div>
+      </div>
+    </section>
+    <section>
+      <p class="kicker">WHAT WE LEARNED</p>
+      <h2>用户要的不是更多生成，而是更可控的编辑</h2>
+      <p class="lead" style="font-family: '宋体', SimSun, serif; background-color: #eef6f1; color: #1b4d3a; padding: 20px 24px; border-radius: 8px;">真正决定用户敢不敢用的，从来不是能生成多少，而是每一次修改是否可预期、可解释、可回退——这正是本季度最硬的三点共识。</p>
+      <div class="columns">
+        <ul>
+          <li>视觉指代比长文本描述更高效：用户更愿意直接指向要改的元素，而不是反复用文字描述位置。</li>
+          <li>局部修改必须证明没有影响其他区域，给出证据。缺少这层保障，用户就不敢把工具用在正式项目里。</li>
+          <li>本地文件所有权决定了工具能否进入真实工作流：数据留在用户手里，才谈得上信任与长期使用。</li>
+        </ul>
+        <div class="quote" style="background: #eaf4fd; border-left-color: #1a365d; border-bottom: 4px solid #cfe6fb; align-self: start;">“我需要知道它具体改了哪里，以及页面有没有被意外弄坏。”</div>
+      </div>
+    </section>
+    <section>
+      <p class="kicker">WHEN TO USE</p>
+      <h2>什么时候用这个编辑工具，什么时候不用</h2>
+      <p class="lead">它擅长在已有页面上做可指代、可验证的精确修改，而不是从零构建或大规模重排。选对场景，才能拿到前面那些收益。</p>
+      <div class="columns">
+        <div>
+          <h3 style="margin: 0 0 18px; color: #1b7051; font-size: 22px;">适合用</h3>
+          <ul>
+            <li>在已有单文件页面上做局部调整：改文案、换配色、微调间距与样式。</li>
+            <li>能直接指向具体元素，说清"改这里"而不是"重做一版"。</li>
+            <li>需要保留其他区域和交互逻辑，只动明确圈定的范围。</li>
+            <li>希望每次改动都能被核对、被回退，用在正式项目里。</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="margin: 0 0 18px; color: #db5d2e; font-size: 22px;">不适合用</h3>
+          <ul>
+            <li>从零搭建一个全新页面或多文件项目，缺少可编辑的原始文件。</li>
+            <li>需要大规模重构：推翻整体结构、重排信息架构或换技术栈。</li>
+            <li>改动意图模糊、无法定位到具体元素或范围。</li>
+            <li>依赖后端逻辑、构建流程或运行时数据，而非静态页面本身。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

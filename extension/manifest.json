@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "htmlwright",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwyzYQ4hGVzyDzIjp2mb0fqqvJ4jSYMSeuP9EhostcbAuyucG/WCmqvOJrl23vC3UTMQYiMN1GqC3yeP1PPhG89lqBEzlfVgezJTTgnPozaRnhSpCWZSZeyQ+elt6pZcP7QPoHKOMU2Wlk534Rw1l8DFqQpsia4wjRA3iFjF+DlzwdAAvyYpYuov+kEdVTG4WA4g2QXI95Wk06tu+zCB5UcJVgEXxRBE3jBCtIn4oQ/LTZl6rke0TD5rw6i+VbBZXUTw7sSMHG9YsHV+KnoF5jBs2jWTgq88/JSnID7g4+2Tnv+PgGWv/6gXXlOcNMi1yLK/N1R5HAeNnIP91Ay/HOQIDAQAB",
+  "description": "在浏览器中点选本地 HTML，并通过本地 htmlwright Helper 安全修改文件。",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "file:///*"
+  ],
+  "action": {
+    "default_title": "打开 htmlwright"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+        "file:///*"
+      ],
+      "js": ["content-script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://localhost:* http://127.0.0.1:*"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+.env*
+!.env.example
+*.log
+.htmlwright/
+coverage/
+.vinext/
+.wrangler/
