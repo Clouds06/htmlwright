@@ -1,36 +1,21 @@
 const DEFAULT_BASE_URL = "http://localhost:4178";
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
-});
+function initSidePanel() {
+  // Don't auto-open on the toolbar action — we open it per-tab on an explicit click.
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => undefined);
+  // Disabled by default; only a tab the user explicitly opens it on gets it enabled,
+  // so it never auto-shows on any other tab (even another local HTML file).
+  chrome.sidePanel.setOptions({ enabled: false }).catch(() => undefined);
+}
+chrome.runtime.onInstalled.addListener(initSidePanel);
+chrome.runtime.onStartup.addListener(initSidePanel);
 
-chrome.runtime.onStartup.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
-});
-
-// The side panel is only useful on a local HTML page, so enable it per-tab for
-// file:// / localhost and disable it everywhere else — it no longer follows the
-// user onto unrelated sites once opened.
-function isLocalPage(url) {
-  try {
-    const parsed = new URL(url || '');
-    return parsed.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(parsed.hostname);
-  } catch {
-    return false;
-  }
+async function openSidePanelForTab(tabId) {
+  await chrome.sidePanel.setOptions({ tabId, path: 'sidepanel.html', enabled: true }).catch(() => undefined);
+  await chrome.sidePanel.open({ tabId }).catch(() => undefined);
 }
 
-function syncSidePanel(tabId, url) {
-  chrome.sidePanel.setOptions({ tabId, path: 'sidepanel.html', enabled: isLocalPage(url) }).catch(() => undefined);
-}
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.url || changeInfo.status === 'complete') syncSidePanel(tabId, tab.url);
-});
-
-chrome.tabs.onActivated.addListener(({ tabId }) => {
-  chrome.tabs.get(tabId).then(tab => syncSidePanel(tabId, tab.url)).catch(() => undefined);
-});
+chrome.action.onClicked.addListener(tab => { if (tab.id !== undefined) openSidePanelForTab(tab.id); });
 
 function normalizeBaseUrl(input) {
   const url = new URL(input || DEFAULT_BASE_URL);
@@ -55,7 +40,7 @@ async function storePreviewMessage(message, sender) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === 'htmlwright:preview-message') {
     if (message.payload?.type === 'htmlwright:selected' && sender.tab?.id) {
-      chrome.sidePanel.open({ tabId: sender.tab.id }).catch(() => undefined);
+      openSidePanelForTab(sender.tab.id);
     }
     storePreviewMessage(message, sender).then(() => sendResponse({ ok: true })).catch(error => sendResponse({ error: error.message }));
     return true;
