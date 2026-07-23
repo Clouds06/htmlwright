@@ -1,13 +1,5 @@
 const DEFAULT_BASE_URL = "http://localhost:4178";
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
-});
-
-chrome.runtime.onStartup.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
-});
-
 // The side panel is only useful on a local HTML page, so enable it per-tab for
 // file:// / localhost and disable it everywhere else — it no longer follows the
 // user onto unrelated sites once opened.
@@ -31,6 +23,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onActivated.addListener(({ tabId }) => {
   chrome.tabs.get(tabId).then(tab => syncSidePanel(tabId, tab.url)).catch(() => undefined);
 });
+
+// Runs on every service-worker start (including a manual extension reload, which
+// does not fire onInstalled/onStartup). Evaluates ALL already-open tabs so the
+// panel is immediately disabled on non-local pages instead of only after a switch.
+function initSidePanel() {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
+  chrome.tabs.query({}).then(tabs => {
+    for (const tab of tabs) if (tab.id !== undefined) syncSidePanel(tab.id, tab.url);
+  }).catch(() => undefined);
+}
+chrome.runtime.onInstalled.addListener(initSidePanel);
+chrome.runtime.onStartup.addListener(initSidePanel);
+initSidePanel();
 
 function normalizeBaseUrl(input) {
   const url = new URL(input || DEFAULT_BASE_URL);
