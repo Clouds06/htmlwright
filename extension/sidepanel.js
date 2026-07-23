@@ -251,6 +251,7 @@ function syncQuickEditor() {
   const fontSize = Math.round((Number.parseFloat(selection.computedStyle?.fontSize) || 16) * 10) / 10;
   quickInitial = { text: selection.editableText, color, backgroundColor, fontSize };
   elements.quickText.disabled = !textEditable;
+  elements.quickText.classList.toggle('hidden', !textEditable);
   elements.quickText.value = textEditable ? selection.editableText : '';
   elements.quickColor.value = color;
   elements.quickBackground.value = backgroundColor;
@@ -267,7 +268,7 @@ function renderSelection() {
     elements.selectionSummary.className = 'selection-summary empty';
     elements.selectionSummary.querySelector('.tag').textContent = '—';
     elements.selectionSummary.querySelector('strong').textContent = '尚未选择元素';
-    elements.selectionSummary.querySelector('small').textContent = '未选时将修改整个文件';
+    elements.selectionSummary.querySelector('small').textContent = '点选元素可快速调样式或用 AI 精修；未选则改整个文件';
     elementButton.disabled = true;
     if (scope === 'element') setScope('document');
     syncQuickEditor();
@@ -377,6 +378,10 @@ function renderConnection() {
   elements.connectionBadge.textContent = connected ? (transport === 'native' ? '本地文件' : '已连接') : '未连接';
   elements.connectionBadge.className = `connection ${connected ? 'ready' : 'offline'}`;
   elements.connectionPanel.classList.toggle('native-connected', transport === 'native' && connected);
+  elements.connectionPanel.classList.toggle('hidden', transport === 'native' && connected);
+  elements.connectionBadge.title = connected
+    ? (transport === 'native' ? '已通过 Native Host 连接当前文件，无需启动 localhost 服务' : '已连接本地 Helper')
+    : '未连接，请用 Chrome 打开一个本地 HTML 文件';
   elements.nativeHint.classList.toggle('hidden', transport !== 'native' || !connected);
   elements.sourceLabel.textContent = transport === 'native' ? 'Native Host' : '本地 Helper 地址';
 }
@@ -592,6 +597,7 @@ async function applyQuickChanges() {
 function setScope(nextScope) {
   scope = nextScope;
   elements.scopeControl.querySelectorAll('button').forEach(item => item.classList.toggle('active', item.dataset.scope === scope));
+  void sendBridge({ type: 'htmlwright:highlight-scope', scope }).catch(() => undefined);
   renderIntentTarget();
   renderState();
 }

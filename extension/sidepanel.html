@@ -36,12 +36,12 @@
 
         <div id="selection-summary" class="selection-summary empty">
           <span class="tag">—</span>
-          <div><strong>尚未选择元素</strong><small>未选时将修改整个文件</small></div>
+          <div><strong>尚未选择元素</strong><small>点选元素可快速调样式或用 AI 精修；未选则改整个文件</small></div>
         </div>
 
         <section id="quick-edit-panel" class="card hidden">
-          <div class="card-head"><span class="eyebrow">编辑</span><h2>快速调整</h2><span class="status-chip">免 AI</span></div>
-          <textarea id="quick-text" rows="2" placeholder="所选元素包含子元素，请用「用 AI 改」修改文字"></textarea>
+          <div class="card-head"><h2>快速调整</h2><span class="status-chip">免 AI</span></div>
+          <textarea id="quick-text" rows="2" placeholder="编辑选中的文字"></textarea>
           <div class="quick-style-row">
             <label>文字色<input id="quick-color" type="color" value="#202522"></label>
             <label>背景色<input id="quick-background" type="color" value="#ffffff"></label>
@@ -51,7 +51,7 @@
         </section>
 
         <section class="card">
-          <div class="card-head"><span class="eyebrow">编辑</span><h2>用 AI 改</h2></div>
+          <div class="card-head"><h2>用 AI 改</h2></div>
           <div class="scope-wrap">
             <span class="field-label">应用到</span>
             <div id="scope-control" class="scope-control" aria-label="应用到">

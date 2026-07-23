@@ -27,6 +27,7 @@ function installFileSelector() {
   const blocked = new Set(['HTML', 'BODY', 'SCRIPT', 'STYLE', 'LINK', 'META', 'HEAD']);
   let selecting = true;
   let active;
+  let highlightTarget;
   let serial = 0;
   const eligible = [...document.querySelectorAll('body *')].filter(element => !blocked.has(element.tagName));
   eligible.forEach(element => { element.dataset.htmlwrightId = String(++serial); });
@@ -78,7 +79,8 @@ function installFileSelector() {
   };
   const select = element => {
     active = element;
-    position(active, selected);
+    highlightTarget = element;
+    position(highlightTarget, selected);
     const detail = describe(element);
     const unit = element.closest('[data-htmlwright-unit]');
     detail.unitIndex = unit ? Number(unit.dataset.htmlwrightUnit) : undefined;
@@ -100,8 +102,8 @@ function installFileSelector() {
     event.stopPropagation();
     select(element);
   }, true);
-  addEventListener('scroll', () => position(active, selected), true);
-  addEventListener('resize', () => position(active, selected));
+  addEventListener('scroll', () => position(highlightTarget, selected), true);
+  addEventListener('resize', () => position(highlightTarget, selected));
 
   chrome.runtime.onMessage.addListener(message => {
     if (message?.type !== 'htmlwright:bridge-command') return;
@@ -121,6 +123,14 @@ function installFileSelector() {
       document.documentElement.append(frame);
       hover.style.display = 'none';
       selected.style.display = 'none';
+    }
+    if (command.type === 'htmlwright:highlight-scope' && active) {
+      highlightTarget = command.scope === 'document'
+        ? document.body
+        : command.scope === 'page'
+          ? (active.closest('[data-htmlwright-unit]') || document.body)
+          : active;
+      position(highlightTarget, selected);
     }
     if (command.type === 'htmlwright:clear-candidate') document.getElementById(PREVIEW_ID)?.remove();
     if (command.type === 'htmlwright:reload') location.reload();
