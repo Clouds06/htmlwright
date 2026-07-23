@@ -8,6 +8,30 @@ chrome.runtime.onStartup.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
 });
 
+// The side panel is only useful on a local HTML page, so enable it per-tab for
+// file:// / localhost and disable it everywhere else — it no longer follows the
+// user onto unrelated sites once opened.
+function isLocalPage(url) {
+  try {
+    const parsed = new URL(url || '');
+    return parsed.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function syncSidePanel(tabId, url) {
+  chrome.sidePanel.setOptions({ tabId, path: 'sidepanel.html', enabled: isLocalPage(url) }).catch(() => undefined);
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.url || changeInfo.status === 'complete') syncSidePanel(tabId, tab.url);
+});
+
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  chrome.tabs.get(tabId).then(tab => syncSidePanel(tabId, tab.url)).catch(() => undefined);
+});
+
 function normalizeBaseUrl(input) {
   const url = new URL(input || DEFAULT_BASE_URL);
   if (!['localhost', '127.0.0.1'].includes(url.hostname) || !['http:', 'https:'].includes(url.protocol)) {
