@@ -124,13 +124,18 @@ function installFileSelector() {
       hover.style.display = 'none';
       selected.style.display = 'none';
     }
-    if (command.type === 'htmlwright:highlight-scope' && active && !document.getElementById(PREVIEW_ID)) {
-      highlightTarget = command.scope === 'document'
-        ? document.body
-        : command.scope === 'page'
-          ? (active.closest('[data-htmlwright-unit]') || document.body)
-          : active;
-      position(highlightTarget, selected);
+    if (command.type === 'htmlwright:highlight-scope') {
+      const frame = document.getElementById(PREVIEW_ID);
+      if (frame) {
+        frame.contentWindow?.postMessage(command, '*');
+      } else if (active) {
+        highlightTarget = command.scope === 'document'
+          ? document.body
+          : command.scope === 'page'
+            ? (active.closest('[data-htmlwright-unit]') || document.body)
+            : active;
+        position(highlightTarget, selected);
+      }
     }
     if (command.type === 'htmlwright:clear-candidate') document.getElementById(PREVIEW_ID)?.remove();
     if (command.type === 'htmlwright:reload') location.reload();

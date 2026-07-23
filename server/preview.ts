@@ -16,6 +16,7 @@ const BRIDGE = String.raw`
   const blocked = new Set(['HTML','BODY','SCRIPT','STYLE','LINK','META','HEAD']);
   let selecting = true;
   let active = null;
+  let highlightTarget = null;
   let serial = 0;
 
   const eligible = [...document.querySelectorAll('body *')].filter(el => !blocked.has(el.tagName) && el.id !== hover.id && el.id !== selected.id);
@@ -66,7 +67,8 @@ const BRIDGE = String.raw`
 
   const select = (el) => {
     active = el;
-    rect(active, selected);
+    highlightTarget = el;
+    rect(highlightTarget, selected);
     const chain = [];
     let cursor = el;
     while (cursor && cursor !== document.body && chain.length < 7) {
@@ -93,8 +95,8 @@ const BRIDGE = String.raw`
     event.preventDefault(); event.stopPropagation();
     select(el);
   }, true);
-  addEventListener('scroll', () => { rect(active, selected); }, true);
-  addEventListener('resize', () => { rect(active, selected); });
+  addEventListener('scroll', () => { rect(highlightTarget, selected); }, true);
+  addEventListener('resize', () => { rect(highlightTarget, selected); });
   addEventListener('message', event => {
     const msg = event.data || {};
     if (msg.type === 'htmlwright:request-state') {
@@ -111,6 +113,14 @@ const BRIDGE = String.raw`
     }
     if (msg.type === 'htmlwright:scroll-unit') {
       document.querySelector('[data-htmlwright-unit="' + Number(msg.index) + '"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (msg.type === 'htmlwright:highlight-scope' && active) {
+      highlightTarget = msg.scope === 'document'
+        ? document.body
+        : msg.scope === 'page'
+          ? (active.closest('[data-htmlwright-unit]') || document.body)
+          : active;
+      rect(highlightTarget, selected);
     }
   });
   parent.postMessage({ type: 'htmlwright:ready', mode, units: unitData, dynamic: isDynamic }, '*');
