@@ -349,10 +349,10 @@ function renderReview() {
     indexLabel.className = 'change-index';
     indexLabel.textContent = String(index + 1);
     meta.className = 'change-meta';
-    const method = change.kind === 'quick' ? '⚡ 快速' : `✨ ${providerLabels[change.provider] || 'AI'}`;
-    meta.textContent = change.legacy
-      ? `${method} · 升级前候选（目标信息未记录）`
-      : `${method} · ${targetLabel(change.target, change.scope)}`;
+    const icon = change.kind === 'quick' ? '⚡' : '✨';
+    const where = change.target?.breadcrumb || change.target?.tag
+      || (change.scope === 'document' ? '整个文件' : change.scope === 'page' ? '这一页' : '选中项');
+    meta.textContent = change.legacy ? `${icon} 升级前候选` : `${icon} ${where}`;
     intent.textContent = change.intent;
     intent.title = change.intent;
     body.append(meta, intent);

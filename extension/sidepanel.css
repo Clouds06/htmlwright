@@ -143,11 +143,11 @@ input:focus, textarea:focus, select:focus { border-color: var(--ink); box-shadow
 .empty-review { display: grid; place-items: center; padding: 28px 16px; color: var(--muted); text-align: center; font-size: 11px; }
 .review-content { display: grid; align-content: start; gap: 12px; }
 .change-log-heading, .change-log .subhead { margin-bottom: 6px; }
-.change-log ol { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
-.change-log li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.change-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.change-list li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .change-index { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 999px; color: #fafafa; background: var(--ink); font-size: 9px; font-weight: 700; }
 .change-meta { color: var(--muted); font-size: 10px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.change-log p { margin: 3px 0 0; color: var(--ink); font-size: 11px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.change-list p { margin: 3px 0 0; color: var(--ink); font-size: 11px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .checks { display: grid; gap: 5px; }
 .check { display: flex; gap: 6px; font-size: 11px; }
 .check.passed { color: var(--ink); }

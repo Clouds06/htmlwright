@@ -74,7 +74,7 @@ test('side panel makes every accumulated instruction target explicit', async () 
   assert.match(script, /if \(selection\) setScope\('element'\)/);
   assert.match(script, /pending\.changes/);
   assert.match(html, /id="change-count"/);
-  assert.match(script, /升级前候选（目标信息未记录）/);
+  assert.match(script, /升级前候选/);
 });
 
 test('AI edits can be queued while the current candidate is generating', async () => {
