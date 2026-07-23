@@ -124,7 +124,7 @@ function installFileSelector() {
       hover.style.display = 'none';
       selected.style.display = 'none';
     }
-    if (command.type === 'htmlwright:highlight-scope' && active) {
+    if (command.type === 'htmlwright:highlight-scope' && active && !document.getElementById(PREVIEW_ID)) {
       highlightTarget = command.scope === 'document'
         ? document.body
         : command.scope === 'page'
