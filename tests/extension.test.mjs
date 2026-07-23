@@ -45,8 +45,7 @@ test('side panel exposes the AI editing scopes (unit is intentionally not surfac
 test('element selection requests the side panel immediately', async () => {
   const worker = await readFile(new URL('service-worker.js', extensionRoot), 'utf8');
   assert.match(worker, /htmlwright:selected/);
-  assert.match(worker, /openSidePanelForTab\(sender\.tab\.id\)/);
-  assert.match(worker, /chrome\.sidePanel\.open\(\{ tabId \}\)/);
+  assert.match(worker, /chrome\.sidePanel\.open\(\{ tabId: sender\.tab\.id \}\)/);
 });
 
 test('side panel can configure the Claude Code executable', async () => {
