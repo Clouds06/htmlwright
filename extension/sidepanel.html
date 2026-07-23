@@ -14,6 +14,14 @@
         <span id="connection-badge" class="connection offline">未连接</span>
       </header>
 
+      <div class="model-bar">
+        <span class="mb-label">模型</span>
+        <div class="mb-right">
+          <select id="provider"></select>
+          <button id="claude-settings-button" class="icon-btn hidden" type="button" title="AI 后端设置" aria-label="AI 后端设置">⚙</button>
+        </div>
+      </div>
+
       <div class="scroll-area">
         <section id="connection-panel" class="card connection-panel">
           <div class="card-head"><span class="eyebrow">连接</span></div>
@@ -26,40 +34,34 @@
           <p id="native-hint" class="hint hidden">已通过 Native Host 连接当前文件，无需启动 localhost 服务。</p>
         </section>
 
-        <section class="card edit-panel">
-          <div class="card-head"><span class="eyebrow">编辑</span><h2>描述改动</h2></div>
-          <div id="selection-summary" class="selection-summary empty">
-            <span class="tag">—</span>
-            <div><strong>尚未选择元素</strong><small>可直接修改整页或整个 HTML</small></div>
+        <div id="selection-summary" class="selection-summary empty">
+          <span class="tag">—</span>
+          <div><strong>尚未选择元素</strong><small>未选时将修改整个文件</small></div>
+        </div>
+
+        <section id="quick-edit-panel" class="card hidden">
+          <div class="card-head"><span class="eyebrow">编辑</span><h2>快速调整</h2><span class="status-chip">免 AI</span></div>
+          <textarea id="quick-text" rows="2" placeholder="所选元素包含子元素，请用「用 AI 改」修改文字"></textarea>
+          <div class="quick-style-row">
+            <label>文字色<input id="quick-color" type="color" value="#202522"></label>
+            <label>背景色<input id="quick-background" type="color" value="#ffffff"></label>
+            <label>字号<input id="quick-font-size" type="number" min="6" max="200" step="1"><span>px</span></label>
+            <button id="quick-apply-button" type="button" class="btn btn-ghost">应用</button>
           </div>
-          <div id="quick-edit-panel" class="quick-edit-panel hidden">
-            <div class="subhead"><strong>快速编辑</strong><span class="pill-tag">无需 AI</span></div>
-            <textarea id="quick-text" rows="2" placeholder="所选元素包含子元素，请使用 AI 修改文字"></textarea>
-            <div class="quick-style-row">
-              <label>文字色<input id="quick-color" type="color" value="#202522"></label>
-              <label>背景色<input id="quick-background" type="color" value="#ffffff"></label>
-              <label>字号<input id="quick-font-size" type="number" min="6" max="200" step="1"><span>px</span></label>
-              <button id="quick-apply-button" type="button" class="btn btn-ghost">应用</button>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><span class="eyebrow">编辑</span><h2>用 AI 改</h2></div>
+          <div class="scope-wrap">
+            <span class="field-label">应用到</span>
+            <div id="scope-control" class="scope-control" aria-label="应用到">
+              <button data-scope="element" disabled>这一处</button>
+              <button data-scope="page" class="hidden">这一页</button>
+              <button data-scope="document" class="active">整个文件</button>
             </div>
           </div>
-          <div class="field">
-            <span class="field-label">编辑范围</span>
-            <div id="scope-control" class="scope-control" aria-label="编辑范围">
-              <button data-scope="element" disabled>元素</button>
-              <button data-scope="unit">当前单元</button>
-              <button data-scope="page">整页</button>
-              <button data-scope="document" class="active">整个 HTML</button>
-            </div>
-          </div>
-          <div id="intent-target" class="intent-target">本次意见 → 整个 HTML</div>
-          <textarea id="intent" rows="5" placeholder="例如：统一所有页面的字体、背景和强调色"></textarea>
-          <div class="provider-row">
-            <label for="provider">AI 后端</label>
-            <div class="provider-controls">
-              <select id="provider"></select>
-              <button id="claude-settings-button" class="icon-btn hidden" type="button" title="AI 后端设置" aria-label="AI 后端设置">⚙</button>
-            </div>
-          </div>
+          <p id="intent-target" class="intent-target">修改整个文件</p>
+          <textarea id="intent" rows="5" placeholder="例如：把这个数字放大加粗，用品牌主色强调"></textarea>
           <button id="generate-button" class="btn btn-primary btn-block" disabled>生成候选改动</button>
           <div id="generation-queue" class="generation-queue hidden" aria-live="polite">
             <div class="subhead"><strong>生成队列</strong><span id="generation-queue-count"></span></div>
@@ -68,21 +70,23 @@
           <p id="message" class="message" role="status"></p>
         </section>
 
-        <section class="card review-panel">
-          <div class="card-head"><span class="eyebrow">审核</span><h2>候选改动</h2><span id="verification-status" class="status-chip">等待改动</span></div>
-          <div id="empty-review" class="empty-review">生成后将在这里显示验证结果和代码差异。</div>
-          <div id="review-content" class="review-content hidden">
-            <section class="change-log" aria-labelledby="change-log-title">
-              <div class="subhead"><strong id="change-log-title">当前候选包含</strong><span id="change-count"></span></div>
-              <ol id="change-list"></ol>
-            </section>
-            <div id="checks" class="checks"></div>
+        <div id="review-content" class="review-content hidden">
+          <section class="card">
+            <div class="card-head"><span class="eyebrow">审核</span><h2>候选改动</h2><span id="change-count" class="status-chip"></span></div>
+            <ol id="change-list" class="change-list"></ol>
             <details id="diff-details" class="diff-details">
               <summary>查看代码差异</summary>
               <pre id="diff"></pre>
             </details>
-          </div>
-        </section>
+            <p class="foot-hint">可继续点选元素，累计修改后一起写回。</p>
+          </section>
+          <section class="card">
+            <div class="card-head"><span class="eyebrow">验证</span><h2>安全检查</h2><span id="verification-status" class="status-chip">等待改动</span></div>
+            <div id="checks" class="checks"></div>
+          </section>
+        </div>
+
+        <div id="empty-review" class="card empty-review">生成候选后，这里会显示验证结果与代码差异。</div>
       </div>
 
       <footer class="action-bar">

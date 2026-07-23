@@ -6,10 +6,10 @@ const providerLabels = {
   demo: '本地演示',
 };
 const scopeLabels = {
-  element: '元素',
-  unit: '当前单元',
-  page: '整页',
-  document: '整个 HTML',
+  element: '这一处',
+  unit: '这个区块',
+  page: '这一页',
+  document: '整个文件',
 };
 
 const elements = {
@@ -67,6 +67,7 @@ let appState;
 let selection;
 let activeTab;
 let scope = 'document';
+let multiPage = false;
 let busy = false;
 let transport = 'offline';
 let openedFileUrl = '';
@@ -164,8 +165,10 @@ async function getActiveTab() {
 }
 
 function applyPreviewState(previewState) {
+  multiPage = (previewState?.ready?.units?.length || 0) > 1;
   selection = previewState?.selection?.element;
   if (selection) setScope('element');
+  else if (scope === 'element') setScope('document');
   renderSelection();
 }
 
@@ -181,8 +184,13 @@ function targetLabel(target = selection, targetScope = scope) {
 }
 
 function renderIntentTarget() {
-  elements.intentTarget.textContent = `本次意见 → ${targetLabel()}`;
-  elements.intentTarget.classList.toggle('invalid', scope === 'element' && !selection);
+  const invalid = scope === 'element' && !selection;
+  let text;
+  if (scope === 'element') text = selection ? `只改你选中的：${selection.breadcrumb || selection.tag}` : '请先在页面上点选一个元素';
+  else if (scope === 'page') text = '只改当前这一页';
+  else text = '统一修改整个文件的所有内容';
+  elements.intentTarget.textContent = text;
+  elements.intentTarget.classList.toggle('invalid', invalid);
 }
 
 function renderGenerationQueue() {
@@ -252,11 +260,14 @@ function syncQuickEditor() {
 
 function renderSelection() {
   const elementButton = elements.scopeControl.querySelector('[data-scope="element"]');
+  const pageButton = elements.scopeControl.querySelector('[data-scope="page"]');
+  pageButton.classList.toggle('hidden', !multiPage);
+  if (!multiPage && scope === 'page') setScope('document');
   if (!selection) {
     elements.selectionSummary.className = 'selection-summary empty';
     elements.selectionSummary.querySelector('.tag').textContent = '—';
     elements.selectionSummary.querySelector('strong').textContent = '尚未选择元素';
-    elements.selectionSummary.querySelector('small').textContent = '可直接修改整页或整个 HTML';
+    elements.selectionSummary.querySelector('small').textContent = '未选时将修改整个文件';
     elementButton.disabled = true;
     if (scope === 'element') setScope('document');
     syncQuickEditor();
@@ -337,7 +348,7 @@ function renderReview() {
     indexLabel.className = 'change-index';
     indexLabel.textContent = String(index + 1);
     meta.className = 'change-meta';
-    const method = change.kind === 'quick' ? '快速编辑' : (providerLabels[change.provider] || 'AI 修改');
+    const method = change.kind === 'quick' ? '⚡ 快速' : `✨ ${providerLabels[change.provider] || 'AI'}`;
     meta.textContent = change.legacy
       ? `${method} · 升级前候选（目标信息未记录）`
       : `${method} · ${targetLabel(change.target, change.scope)}`;
@@ -348,10 +359,6 @@ function renderReview() {
     elements.changeList.append(item);
   });
   elements.checks.replaceChildren();
-  const iterationHint = document.createElement('div');
-  iterationHint.className = 'iteration-hint';
-  iterationHint.textContent = '可继续在候选页面点选元素，累计修改后统一写回。';
-  elements.checks.append(iterationHint);
   const verification = pending.verification;
   if (verification?.available) {
     elements.verificationStatus.textContent = '验证完成';

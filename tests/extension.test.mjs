@@ -35,9 +35,9 @@ test('extension and installer scripts parse without syntax errors', () => {
   }
 });
 
-test('side panel exposes the four editing scopes', async () => {
+test('side panel exposes the AI editing scopes (unit is intentionally not surfaced)', async () => {
   const html = await readFile(new URL('sidepanel.html', extensionRoot), 'utf8');
-  for (const scope of ['element', 'unit', 'page', 'document']) {
+  for (const scope of ['element', 'page', 'document']) {
     assert.match(html, new RegExp(`data-scope="${scope}"`));
   }
 });
@@ -73,7 +73,7 @@ test('side panel makes every accumulated instruction target explicit', async () 
   assert.match(html, /id="change-list"/);
   assert.match(script, /if \(selection\) setScope\('element'\)/);
   assert.match(script, /pending\.changes/);
-  assert.match(html, /当前候选包含/);
+  assert.match(html, /id="change-count"/);
   assert.match(script, /升级前候选（目标信息未记录）/);
 });
 

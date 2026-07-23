@@ -33,6 +33,13 @@ h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
 .topbar small { display: block; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scroll-area { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; }
 .action-bar { flex: none; display: grid; grid-template-columns: 72px 60px minmax(0, 1fr); align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); background: rgba(255,255,255,.7); backdrop-filter: blur(6px); }
+.model-bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--line); background: var(--alt); }
+.model-bar .mb-label { color: var(--muted); font-size: 11px; font-weight: 500; }
+.model-bar .mb-right { display: flex; align-items: center; gap: 6px; }
+.model-bar select { width: auto; min-width: 132px; max-width: 210px; height: 30px; padding: 0 8px; font-size: 12px; }
+.scope-wrap { margin-bottom: 10px; }
+.scope-wrap .field-label { margin-bottom: 6px; }
+.foot-hint { margin: 12px 0 0; color: var(--muted); font-size: 10px; }
 
 /* status chip ------------------------------------------------------------ */
 .connection { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px; font-weight: 600; white-space: nowrap; }
@@ -100,8 +107,8 @@ input:focus, textarea:focus, select:focus { border-color: var(--ink); box-shadow
 .quick-style-row .btn { height: 30px; padding: 0; }
 
 /* scope segmented -------------------------------------------------------- */
-.scope-control { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
-.scope-control button { min-width: 0; height: 27px; padding: 0 4px; border: 0; border-radius: var(--radius-sm); color: var(--muted); background: transparent; font-size: 11px; white-space: nowrap; }
+.scope-control { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.scope-control button { flex: 1; min-width: 0; height: 28px; padding: 0 6px; border: 0; border-radius: var(--radius-sm); color: var(--muted); background: transparent; font-size: 12px; white-space: nowrap; }
 .scope-control button.active { color: var(--ink); background: var(--paper); box-shadow: 0 1px 2px rgba(10,10,10,.1); font-weight: 600; }
 
 .intent-target { margin: 12px 0 8px; color: var(--muted); font-size: 11px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
