@@ -683,6 +683,16 @@ chrome.runtime.onMessage.addListener(message => {
   applyPreviewState(message.state);
 });
 chrome.tabs.onActivated.addListener(() => refreshState({ quiet: false, forceOpen: true }));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Chrome keeps the closed panel's context alive, so rely on the panel becoming
+    // hidden: tear down the port + heartbeat so the page reverts to passive at once.
+    stopContentPing();
+    if (contentPort) { try { contentPort.disconnect(); } catch { /* already gone */ } contentPort = undefined; contentPortTabId = undefined; }
+  } else {
+    refreshState();
+  }
+});
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (tabId === activeTab?.id && changeInfo.status === 'complete') refreshState({ forceOpen: true });
 });
