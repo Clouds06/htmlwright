@@ -25,7 +25,7 @@ function installFileSelector() {
   document.documentElement.append(style, hover, selected);
 
   const blocked = new Set(['HTML', 'BODY', 'SCRIPT', 'STYLE', 'LINK', 'META', 'HEAD']);
-  let selecting = true;
+  let selecting = false;
   let active;
   let highlightTarget;
   let serial = 0;
@@ -139,6 +139,22 @@ function installFileSelector() {
     }
     if (command.type === 'htmlwright:clear-candidate') document.getElementById(PREVIEW_ID)?.remove();
     if (command.type === 'htmlwright:reload') location.reload();
+  });
+
+  // Selection is active only while the side panel is open on this tab: the panel
+  // opens a port on open and it disconnects on close. Until then (and after close)
+  // the page is untouched — no crosshair, no hover, clicks pass through — so you
+  // can just read a local HTML without the tool taking over.
+  chrome.runtime.onConnect.addListener(port => {
+    if (port.name !== 'htmlwright-panel') return;
+    selecting = true;
+    document.documentElement.classList.toggle('htmlwright-selecting', true);
+    port.onDisconnect.addListener(() => {
+      selecting = false;
+      document.documentElement.classList.toggle('htmlwright-selecting', false);
+      hover.style.display = 'none';
+      selected.style.display = 'none';
+    });
   });
   sendReady();
 }

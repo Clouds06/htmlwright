@@ -74,6 +74,8 @@ let openedFileUrl = '';
 let nativePort;
 let requestSerial = 0;
 let claudeDialogPrompted = false;
+let contentPort;
+let contentPortTabId;
 let quickInitial;
 let activeGeneration;
 const generationQueue = [];
@@ -152,6 +154,22 @@ async function sendBridge(payload) {
   if (!activeTab?.id) return;
   const result = await chrome.runtime.sendMessage({ type: 'htmlwright:bridge-command', tabId: activeTab.id, payload });
   if (result?.error) throw new Error(result.error);
+}
+
+// Hold a port to the current local tab's content script while the panel is open.
+// The content script activates selection on connect and reverts to passive when
+// this port disconnects (i.e. when the panel closes), so reading is never disturbed.
+function syncContentPort() {
+  if (transport === 'native' && activeTab?.id) {
+    if (contentPort && contentPortTabId === activeTab.id) return;
+    if (contentPort) { try { contentPort.disconnect(); } catch { /* already gone */ } }
+    try { contentPort = chrome.tabs.connect(activeTab.id, { name: 'htmlwright-panel' }); contentPortTabId = activeTab.id; }
+    catch { contentPort = undefined; contentPortTabId = undefined; }
+  } else if (contentPort) {
+    try { contentPort.disconnect(); } catch { /* already gone */ }
+    contentPort = undefined;
+    contentPortTabId = undefined;
+  }
 }
 
 async function getActiveTab() {
@@ -477,6 +495,7 @@ async function refreshState({ quiet = true, forceOpen = false } = {}) {
     transport = activeTab?.url?.startsWith('file://') ? 'native' : 'offline';
     if (!quiet) setMessage(error.message, 'error');
   }
+  syncContentPort();
   renderState();
 }
 

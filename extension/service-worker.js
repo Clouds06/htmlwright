@@ -1,41 +1,22 @@
 const DEFAULT_BASE_URL = "http://localhost:4178";
 
-// The side panel is only useful on a local HTML page, so enable it per-tab for
-// file:// / localhost and disable it everywhere else — it no longer follows the
-// user onto unrelated sites once opened.
-function isLocalPage(url) {
-  try {
-    const parsed = new URL(url || '');
-    return parsed.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(parsed.hostname);
-  } catch {
-    return false;
-  }
-}
-
-function syncSidePanel(tabId, url) {
-  chrome.sidePanel.setOptions({ tabId, path: 'sidepanel.html', enabled: isLocalPage(url) }).catch(() => undefined);
-}
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.url || changeInfo.status === 'complete') syncSidePanel(tabId, tab.url);
-});
-
-chrome.tabs.onActivated.addListener(({ tabId }) => {
-  chrome.tabs.get(tabId).then(tab => syncSidePanel(tabId, tab.url)).catch(() => undefined);
-});
-
-// Runs on every service-worker start (including a manual extension reload, which
-// does not fire onInstalled/onStartup). Evaluates ALL already-open tabs so the
-// panel is immediately disabled on non-local pages instead of only after a switch.
+// The panel is disabled everywhere by default and only opens on the exact tab
+// where the user clicks the toolbar icon — it never auto-shows on any other tab.
 function initSidePanel() {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => undefined);
-  chrome.tabs.query({}).then(tabs => {
-    for (const tab of tabs) if (tab.id !== undefined) syncSidePanel(tab.id, tab.url);
-  }).catch(() => undefined);
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => undefined);
+  chrome.sidePanel.setOptions({ enabled: false }).catch(() => undefined);
 }
 chrome.runtime.onInstalled.addListener(initSidePanel);
 chrome.runtime.onStartup.addListener(initSidePanel);
 initSidePanel();
+
+chrome.action.onClicked.addListener(tab => {
+  if (tab.id === undefined) return;
+  // Enable then open() must run in the same gesture without an await in between,
+  // or the user-gesture context is lost and open() is rejected (panel won't show).
+  chrome.sidePanel.setOptions({ tabId: tab.id, path: 'sidepanel.html', enabled: true }).catch(() => undefined);
+  chrome.sidePanel.open({ tabId: tab.id }).catch(() => undefined);
+});
 
 function normalizeBaseUrl(input) {
   const url = new URL(input || DEFAULT_BASE_URL);
