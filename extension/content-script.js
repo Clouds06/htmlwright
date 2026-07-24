@@ -90,7 +90,7 @@ function installFileSelector() {
 
   document.documentElement.classList.toggle('htmlwright-selecting', selecting);
   document.addEventListener('mousemove', event => {
-    if (!selecting || document.getElementById(PREVIEW_ID)) return;
+    if (!selecting || document.getElementById(PREVIEW_ID)) { hover.style.display = 'none'; return; }
     const element = event.target instanceof Element ? event.target.closest('[data-htmlwright-id]') : null;
     position(element, hover);
   }, true);

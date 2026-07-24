@@ -6,7 +6,17 @@ function initSidePanel() {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).catch(() => undefined);
   chrome.sidePanel.setOptions({ enabled: false }).catch(() => undefined);
 }
-chrome.runtime.onInstalled.addListener(initSidePanel);
+chrome.runtime.onInstalled.addListener(() => {
+  initSidePanel();
+  // Reload already-open local HTML tabs so they pick up the current content script
+  // (reloading the extension does not re-inject into existing tabs on its own).
+  chrome.tabs.query({}).then(tabs => {
+    for (const tab of tabs) {
+      if (tab.id === undefined || !tab.url) continue;
+      try { if (new URL(tab.url).protocol === 'file:') chrome.tabs.reload(tab.id).catch(() => undefined); } catch { /* skip */ }
+    }
+  }).catch(() => undefined);
+});
 chrome.runtime.onStartup.addListener(initSidePanel);
 initSidePanel();
 
