@@ -76,6 +76,7 @@ let requestSerial = 0;
 let claudeDialogPrompted = false;
 let contentPort;
 let contentPortTabId;
+let contentPing;
 let quickInitial;
 let activeGeneration;
 const generationQueue = [];
@@ -159,13 +160,26 @@ async function sendBridge(payload) {
 // Hold a port to the current local tab's content script while the panel is open.
 // The content script activates selection on connect and reverts to passive when
 // this port disconnects (i.e. when the panel closes), so reading is never disturbed.
+function stopContentPing() {
+  if (contentPing) { clearInterval(contentPing); contentPing = undefined; }
+}
+
 function syncContentPort() {
   if (transport === 'native' && activeTab?.id) {
     if (contentPort && contentPortTabId === activeTab.id) return;
+    stopContentPing();
     if (contentPort) { try { contentPort.disconnect(); } catch { /* already gone */ } }
-    try { contentPort = chrome.tabs.connect(activeTab.id, { name: 'htmlwright-panel' }); contentPortTabId = activeTab.id; }
-    catch { contentPort = undefined; contentPortTabId = undefined; }
+    try {
+      contentPort = chrome.tabs.connect(activeTab.id, { name: 'htmlwright-panel' });
+      contentPortTabId = activeTab.id;
+      // Ping while the panel is open; when it closes this interval dies with the
+      // document, the pings stop, and the page reverts itself to passive.
+      contentPing = setInterval(() => {
+        try { contentPort.postMessage({ t: 'ping' }); } catch { stopContentPing(); }
+      }, 1000);
+    } catch { contentPort = undefined; contentPortTabId = undefined; }
   } else if (contentPort) {
+    stopContentPing();
     try { contentPort.disconnect(); } catch { /* already gone */ }
     contentPort = undefined;
     contentPortTabId = undefined;

@@ -147,14 +147,22 @@ function installFileSelector() {
   // can just read a local HTML without the tool taking over.
   chrome.runtime.onConnect.addListener(port => {
     if (port.name !== 'htmlwright-panel') return;
-    selecting = true;
-    document.documentElement.classList.toggle('htmlwright-selecting', true);
-    port.onDisconnect.addListener(() => {
+    const deactivate = () => {
       selecting = false;
       document.documentElement.classList.toggle('htmlwright-selecting', false);
       hover.style.display = 'none';
       selected.style.display = 'none';
-    });
+    };
+    selecting = true;
+    document.documentElement.classList.toggle('htmlwright-selecting', true);
+    // Heartbeat: the panel pings while open. If pings stop (panel closed) — even
+    // when Chrome doesn't fire onDisconnect — revert to passive within ~2.5s.
+    let lastPing = Date.now();
+    port.onMessage.addListener(() => { lastPing = Date.now(); });
+    const timer = setInterval(() => {
+      if (Date.now() - lastPing > 2500) { clearInterval(timer); deactivate(); }
+    }, 1000);
+    port.onDisconnect.addListener(() => { clearInterval(timer); deactivate(); });
   });
   sendReady();
 }
