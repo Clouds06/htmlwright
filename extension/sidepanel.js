@@ -74,9 +74,7 @@ let openedFileUrl = '';
 let nativePort;
 let requestSerial = 0;
 let claudeDialogPrompted = false;
-let contentPort;
-let contentPortTabId;
-let contentPing;
+const panelAlivePort = chrome.runtime.connect({ name: 'htmlwright-panel-alive' });
 let quickInitial;
 let activeGeneration;
 const generationQueue = [];
@@ -160,30 +158,11 @@ async function sendBridge(payload) {
 // Hold a port to the current local tab's content script while the panel is open.
 // The content script activates selection on connect and reverts to passive when
 // this port disconnects (i.e. when the panel closes), so reading is never disturbed.
-function stopContentPing() {
-  if (contentPing) { clearInterval(contentPing); contentPing = undefined; }
-}
-
+// Tell the service worker which tab (if any) the panel is currently showing. The
+// SW turns this into panel-open / panel-closed for the content script, and detects
+// the panel closing via this port's disconnect.
 function syncContentPort() {
-  if (transport === 'native' && activeTab?.id) {
-    if (contentPort && contentPortTabId === activeTab.id) return;
-    stopContentPing();
-    if (contentPort) { try { contentPort.disconnect(); } catch { /* already gone */ } }
-    try {
-      contentPort = chrome.tabs.connect(activeTab.id, { name: 'htmlwright-panel' });
-      contentPortTabId = activeTab.id;
-      // Ping while the panel is open; when it closes this interval dies with the
-      // document, the pings stop, and the page reverts itself to passive.
-      contentPing = setInterval(() => {
-        try { contentPort.postMessage({ t: 'ping' }); } catch { stopContentPing(); }
-      }, 1000);
-    } catch { contentPort = undefined; contentPortTabId = undefined; }
-  } else if (contentPort) {
-    stopContentPing();
-    try { contentPort.disconnect(); } catch { /* already gone */ }
-    contentPort = undefined;
-    contentPortTabId = undefined;
-  }
+  panelAlivePort.postMessage({ tabId: transport === 'native' && activeTab?.id ? activeTab.id : null });
 }
 
 async function getActiveTab() {
@@ -683,16 +662,6 @@ chrome.runtime.onMessage.addListener(message => {
   applyPreviewState(message.state);
 });
 chrome.tabs.onActivated.addListener(() => refreshState({ quiet: false, forceOpen: true }));
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    // Chrome keeps the closed panel's context alive, so rely on the panel becoming
-    // hidden: tear down the port + heartbeat so the page reverts to passive at once.
-    stopContentPing();
-    if (contentPort) { try { contentPort.disconnect(); } catch { /* already gone */ } contentPort = undefined; contentPortTabId = undefined; }
-  } else {
-    refreshState();
-  }
-});
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (tabId === activeTab?.id && changeInfo.status === 'complete') refreshState({ forceOpen: true });
 });

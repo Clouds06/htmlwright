@@ -88,6 +88,20 @@ function installFileSelector() {
   };
   const sendReady = () => sendPreviewPayload({ type: 'htmlwright:ready', mode: units.length > 1 && !dynamic ? 'unit' : 'page', units: unitData, dynamic });
 
+  const activate = () => {
+    selecting = true;
+    document.documentElement.classList.toggle('htmlwright-selecting', true);
+  };
+  const deactivate = () => {
+    selecting = false;
+    active = null;
+    highlightTarget = null;
+    document.documentElement.classList.toggle('htmlwright-selecting', false);
+    hover.style.display = 'none';
+    selected.style.display = 'none';
+    document.getElementById(PREVIEW_ID)?.remove();
+  };
+
   document.documentElement.classList.toggle('htmlwright-selecting', selecting);
   document.addEventListener('mousemove', event => {
     if (!selecting || document.getElementById(PREVIEW_ID)) { hover.style.display = 'none'; return; }
@@ -109,6 +123,8 @@ function installFileSelector() {
     if (message?.type !== 'htmlwright:bridge-command') return;
     const command = message.payload || {};
     if (command.type === 'htmlwright:request-state') sendReady();
+    if (command.type === 'htmlwright:panel-open') activate();
+    if (command.type === 'htmlwright:panel-closed') deactivate();
     if (command.type === 'htmlwright:selection-mode') {
       selecting = Boolean(command.enabled);
       document.documentElement.classList.toggle('htmlwright-selecting', selecting);
@@ -141,31 +157,8 @@ function installFileSelector() {
     if (command.type === 'htmlwright:reload') location.reload();
   });
 
-  // Selection is active only while the side panel is open on this tab: the panel
-  // opens a port on open and it disconnects on close. Until then (and after close)
-  // the page is untouched — no crosshair, no hover, clicks pass through — so you
-  // can just read a local HTML without the tool taking over.
-  chrome.runtime.onConnect.addListener(port => {
-    if (port.name !== 'htmlwright-panel') return;
-    const deactivate = () => {
-      selecting = false;
-      active = null;
-      highlightTarget = null;
-      document.documentElement.classList.toggle('htmlwright-selecting', false);
-      hover.style.display = 'none';
-      selected.style.display = 'none';
-    };
-    selecting = true;
-    document.documentElement.classList.toggle('htmlwright-selecting', true);
-    // Heartbeat: the panel pings while open. If pings stop (panel closed) — even
-    // when Chrome doesn't fire onDisconnect — revert to passive within ~2.5s.
-    let lastPing = Date.now();
-    port.onMessage.addListener(() => { lastPing = Date.now(); });
-    const timer = setInterval(() => {
-      if (Date.now() - lastPing > 2500) { clearInterval(timer); deactivate(); }
-    }, 1000);
-    port.onDisconnect.addListener(() => { clearInterval(timer); deactivate(); });
-  });
+  // Selection is driven by panel-open / panel-closed messages that the service
+  // worker sends based on the side panel's lifetime (a stable SW-side observer).
   sendReady();
 }
 

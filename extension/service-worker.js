@@ -28,6 +28,30 @@ chrome.action.onClicked.addListener(tab => {
   chrome.sidePanel.open({ tabId: tab.id }).catch(() => undefined);
 });
 
+// The side panel holds this port for its whole lifetime. The service worker is a
+// stable observer, so when the panel is destroyed (closed) onDisconnect fires here
+// reliably — that's what lets the page revert to passive. The panel reports which
+// tab it is currently showing via a message on the port.
+let panelTabId;
+function tellTab(tabId, type) {
+  if (typeof tabId !== 'number') return;
+  chrome.tabs.sendMessage(tabId, { type: 'htmlwright:bridge-command', payload: { type } }).catch(() => undefined);
+}
+chrome.runtime.onConnect.addListener(port => {
+  if (port.name !== 'htmlwright-panel-alive') return;
+  port.onMessage.addListener(msg => {
+    const next = msg && typeof msg.tabId === 'number' ? msg.tabId : undefined;
+    if (next === panelTabId) return;
+    tellTab(panelTabId, 'htmlwright:panel-closed');
+    panelTabId = next;
+    tellTab(panelTabId, 'htmlwright:panel-open');
+  });
+  port.onDisconnect.addListener(() => {
+    tellTab(panelTabId, 'htmlwright:panel-closed');
+    panelTabId = undefined;
+  });
+});
+
 function normalizeBaseUrl(input) {
   const url = new URL(input || DEFAULT_BASE_URL);
   if (!['localhost', '127.0.0.1'].includes(url.hostname) || !['http:', 'https:'].includes(url.protocol)) {
