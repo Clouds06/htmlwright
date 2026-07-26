@@ -23,6 +23,7 @@ function installFileSelector() {
   hover.id = HOVER_ID;
   selected.id = SELECTED_ID;
   document.documentElement.append(style, hover, selected);
+  console.log('[htmlwright] content script loaded (activate-on-demand build); selecting =', false);
 
   const blocked = new Set(['HTML', 'BODY', 'SCRIPT', 'STYLE', 'LINK', 'META', 'HEAD']);
   let selecting = false;
@@ -152,9 +153,11 @@ function installFileSelector() {
       document.documentElement.classList.toggle('htmlwright-selecting', false);
       hover.style.display = 'none';
       selected.style.display = 'none';
+      console.log('[htmlwright] deactivated → selection OFF');
     };
     selecting = true;
     document.documentElement.classList.toggle('htmlwright-selecting', true);
+    console.log('[htmlwright] panel port connected → selection ON');
     // Heartbeat: the panel pings while open. If pings stop (panel closed) — even
     // when Chrome doesn't fire onDisconnect — revert to passive within ~2.5s.
     let lastPing = Date.now();
