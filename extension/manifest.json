@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "htmlwright",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwyzYQ4hGVzyDzIjp2mb0fqqvJ4jSYMSeuP9EhostcbAuyucG/WCmqvOJrl23vC3UTMQYiMN1GqC3yeP1PPhG89lqBEzlfVgezJTTgnPozaRnhSpCWZSZeyQ+elt6pZcP7QPoHKOMU2Wlk534Rw1l8DFqQpsia4wjRA3iFjF+DlzwdAAvyYpYuov+kEdVTG4WA4g2QXI95Wk06tu+zCB5UcJVgEXxRBE3jBCtIn4oQ/LTZl6rke0TD5rw6i+VbBZXUTw7sSMHG9YsHV+KnoF5jBs2jWTgq88/JSnID7g4+2Tnv+PgGWv/6gXXlOcNMi1yLK/N1R5HAeNnIP91Ay/HOQIDAQAB",
   "description": "在浏览器中点选本地 HTML，并通过本地 htmlwright Helper 安全修改文件。",
   "permissions": [
