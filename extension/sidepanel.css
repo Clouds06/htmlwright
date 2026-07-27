@@ -145,6 +145,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--ink); box-shadow
 .change-log-heading, .change-log .subhead { margin-bottom: 6px; }
 .change-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .change-list li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.change-list li:last-child { border-bottom: none; }
 .change-index { width: 19px; height: 19px; display: grid; place-items: center; border-radius: 999px; color: #fafafa; background: var(--ink); font-size: 9px; font-weight: 700; }
 .change-meta { color: var(--muted); font-size: 10px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .change-list p { margin: 3px 0 0; color: var(--ink); font-size: 11px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -154,7 +155,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--ink); box-shadow
 .check.warning { color: var(--danger); }
 .iteration-hint { padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--muted); background: var(--alt); font-size: 10px; }
 
-.diff-details { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
+.diff-details { min-width: 0; margin-top: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow: hidden; }
 .diff-details summary { min-height: 34px; display: flex; align-items: center; padding: 8px 11px; color: var(--ink); font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; }
 .diff-details summary::before { content: '›'; margin-right: 8px; color: var(--muted); font-size: 15px; line-height: 1; transition: transform .12s ease; }
 .diff-details[open] summary::before { transform: rotate(90deg); }
