@@ -6,8 +6,9 @@ import {
   HOST_NAME,
   extensionIdFromKey,
   installedExtensionPath,
-  manifestDirectories,
+  isWindows,
   projectRoot,
+  registerHost,
   runtimeRoot,
   shellQuote,
   wrapperPath,
@@ -22,36 +23,50 @@ await access(hostEntry).catch(() => {
 });
 
 async function findExecutable(name) {
+  // On Windows the Claude Code CLI is claude.cmd/.exe; on POSIX it is a bare `claude`.
+  const leaves = isWindows ? [`${name}.cmd`, `${name}.exe`, `${name}.bat`, name] : [name];
   for (const directory of (process.env.PATH || '').split(path.delimiter).filter(Boolean)) {
-    const candidate = path.join(directory, name);
-    try {
-      await access(candidate, constants.X_OK);
-      return candidate;
-    } catch { /* continue */ }
+    for (const leaf of leaves) {
+      const candidate = path.join(directory, leaf);
+      try {
+        await access(candidate, constants.X_OK);
+        return candidate;
+      } catch { /* continue */ }
+    }
   }
   throw new Error(`找不到 ${name}，请先安装并登录 Claude Code`);
 }
 
 const claudeExecutable = process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE || await findExecutable('claude');
+const extraPathDirs = isWindows ? [] : ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin', '/bin'];
 const nativePath = [...new Set([
   path.dirname(process.execPath),
   path.dirname(claudeExecutable),
-  '/opt/homebrew/bin',
-  '/usr/local/bin',
-  '/usr/bin',
-  '/bin',
-])].join(':');
+  ...extraPathDirs,
+])].join(path.delimiter);
 
 await mkdir(runtimeRoot, { recursive: true });
 await cp(path.join(projectRoot, 'extension'), installedExtensionPath, { recursive: true, force: true });
-await writeFile(wrapperPath, [
-  '#!/bin/sh',
-  `export PATH=${shellQuote(nativePath)}`,
-  `export HTMLWRIGHT_CLAUDE_EXECUTABLE=${shellQuote(claudeExecutable)}`,
-  `exec ${shellQuote(process.execPath)} ${shellQuote(hostEntry)}`,
-  '',
-].join('\n'), 'utf8');
-await chmod(wrapperPath, 0o755);
+
+// The wrapper is what the browser launches for native messaging. Windows can only launch a
+// batch/exe (not a node script directly), so we emit a .bat there and a POSIX script on macOS.
+const wrapperText = isWindows
+  ? [
+      '@echo off',
+      `set "PATH=${nativePath};%PATH%"`,
+      `set "HTMLWRIGHT_CLAUDE_EXECUTABLE=${claudeExecutable}"`,
+      `"${process.execPath}" "${hostEntry}"`,
+      '',
+    ].join('\r\n')
+  : [
+      '#!/bin/sh',
+      `export PATH=${shellQuote(nativePath)}`,
+      `export HTMLWRIGHT_CLAUDE_EXECUTABLE=${shellQuote(claudeExecutable)}`,
+      `exec ${shellQuote(process.execPath)} ${shellQuote(hostEntry)}`,
+      '',
+    ].join('\n');
+await writeFile(wrapperPath, wrapperText, 'utf8');
+if (!isWindows) await chmod(wrapperPath, 0o755);
 
 const nativeManifest = {
   name: HOST_NAME,
@@ -60,11 +75,7 @@ const nativeManifest = {
   type: 'stdio',
   allowed_origins: [`chrome-extension://${extensionId}/`],
 };
-
-for (const directory of manifestDirectories) {
-  await mkdir(directory, { recursive: true });
-  await writeFile(path.join(directory, `${HOST_NAME}.json`), `${JSON.stringify(nativeManifest, null, 2)}\n`, 'utf8');
-}
+await registerHost(nativeManifest);
 
 console.log(`htmlwright Native Host 已安装。`);
 console.log(`扩展 ID: ${extensionId}`);

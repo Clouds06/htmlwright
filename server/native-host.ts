@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { injectPreview } from "./preview.ts";
+import { configFilePath, defaultClaudeExecutable } from "./platform.ts";
 import { createProvider } from "./providers.ts";
 import { ProjectSession, type PendingEdit } from "./session.ts";
 import type { EditRequest, ProviderName, ProviderStatus, QuickEditRequest, VerificationResult } from "./types.ts";
@@ -12,8 +13,7 @@ const MAX_INBOUND_BYTES = 64 * 1024 * 1024;
 const MAX_OUTBOUND_BYTES = 1024 * 1024;
 const DIFF_LIMIT = 240_000;
 const providerNames: ProviderName[] = ["claude-code", "anthropic-api", "openai-compatible", "demo"];
-const configFile = process.env.HTMLWRIGHT_CONFIG_FILE
-  || path.join(homedir(), "Library", "Application Support", "htmlwright", "config.json");
+const configFile = process.env.HTMLWRIGHT_CONFIG_FILE || configFilePath();
 
 interface NativeRequest {
   id: string;
@@ -46,7 +46,7 @@ async function loadConfiguration(): Promise<void> {
     if (stored.openaiBaseUrl) process.env.HTMLWRIGHT_OPENAI_BASE_URL ||= stored.openaiBaseUrl;
     if (stored.openaiModel) process.env.HTMLWRIGHT_OPENAI_MODEL ||= stored.openaiModel;
   } catch { /* use installer environment or default path */ }
-  process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE ||= path.join(homedir(), ".local", "bin", "claude");
+  process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE ||= defaultClaudeExecutable();
 }
 
 interface StoredSettings {
@@ -139,7 +139,7 @@ async function statePayload() {
     transport: "native",
     settings: {
       claudeExecutable: process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE,
-      defaultClaudeExecutable: path.join(homedir(), ".local", "bin", "claude"),
+      defaultClaudeExecutable: defaultClaudeExecutable(),
       openaiApiKey: process.env.HTMLWRIGHT_OPENAI_API_KEY,
       openaiBaseUrl: process.env.HTMLWRIGHT_OPENAI_BASE_URL,
       openaiModel: process.env.HTMLWRIGHT_OPENAI_MODEL,

@@ -1,7 +1,7 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
-import { spawn } from "node:child_process";
 import { createApp } from "./app.ts";
+import { openUrl } from "./platform.ts";
 
 function usage(): never {
   console.error("Usage: htmlwright <file.html> [--port 4178] [--no-open] [--in-place]");
@@ -24,7 +24,7 @@ async function main() {
   const running = await createApp(options);
   console.log(`htmlwright: ${running.url}`);
   console.log(`Editing: ${options.filePath}`);
-  if (!options.noOpen) spawn("open", [running.url], { detached: true, stdio: "ignore" }).unref();
+  if (!options.noOpen) openUrl(running.url);
   const stop = async () => { await running.close(); process.exit(0); };
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);

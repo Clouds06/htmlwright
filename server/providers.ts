@@ -1,17 +1,18 @@
 import { execFile, spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import type { ProviderName, ProviderResult, ProviderStatus, TaskPackage } from "./types.ts";
 import { stripRuntimeAttributes } from "./preview.ts";
+import { defaultClaudeExecutable, isWindows } from "./platform.ts";
 
 const execFileAsync = promisify(execFile);
 const START = "<<<START>>>";
 const END = "<<<END>>>";
 
 function claudeExecutable(): string {
-  return process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE || path.join(homedir(), ".local", "bin", "claude");
+  return process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE || defaultClaudeExecutable();
 }
 
 export interface LLMProvider {
@@ -64,7 +65,7 @@ export function extractHtml(value: string): string {
 
 function run(command: string, args: string[], options: { cwd: string; env: NodeJS.ProcessEnv; input: string }): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(command, args, { cwd: options.cwd, env: options.env, stdio: ["pipe", "pipe", "pipe"], shell: isWindows });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => { child.kill("SIGTERM"); reject(new Error("Claude Code 调用超过 3 分钟")); }, 180_000);
@@ -84,7 +85,7 @@ export class ClaudeCodeProvider implements LLMProvider {
   async status(): Promise<ProviderStatus> {
     if (process.env.ANTHROPIC_API_KEY) return { name: "claude-code", available: false, message: "检测到 ANTHROPIC_API_KEY；为避免误走 API 计费，Claude Code provider 已停用" };
     try {
-      const { stdout } = await execFileAsync(claudeExecutable(), ["auth", "status"], { timeout: 10_000 });
+      const { stdout } = await execFileAsync(claudeExecutable(), ["auth", "status"], { timeout: 10_000, shell: isWindows });
       const auth = JSON.parse(stdout) as { loggedIn?: boolean; authMethod?: string; subscriptionType?: string };
       if (!auth.loggedIn) return { name: "claude-code", available: false, message: "Claude Code 尚未登录" };
       return { name: "claude-code", available: true, message: `已连接 ${auth.subscriptionType ?? "Claude"} 订阅`, auth: auth.authMethod };

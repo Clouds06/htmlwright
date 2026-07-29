@@ -6,12 +6,7 @@ import { chromium, type Browser, type Page } from "playwright-core";
 import { PNG } from "pngjs";
 import type { UnitVerification, VerificationResult } from "./types.ts";
 import { injectPreview } from "./preview.ts";
-
-const CHROME_PATHS = [
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-];
+import { chromeCandidates } from "./platform.ts";
 
 async function findChrome(): Promise<string | undefined> {
   if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE) return process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
@@ -20,7 +15,7 @@ async function findChrome(): Promise<string | undefined> {
     await access(bundled);
     return bundled;
   } catch { /* fall back to installed browsers */ }
-  for (const candidate of CHROME_PATHS) {
+  for (const candidate of chromeCandidates) {
     try { await access(candidate); return candidate; } catch { /* continue */ }
   }
   return undefined;
