@@ -89,12 +89,10 @@ export class ProjectSession {
     this.baselineHtml = html;
   }
 
-  // Re-target the session to another HTML file inside the working root. The previous
-  // file's persisted pending is left on disk, so switching back restores it.
+  // Re-target the session to another local HTML file. The previous file's persisted
+  // pending is left on disk, so switching back restores it.
   async openFile(target: string): Promise<void> {
     const resolved = path.resolve(target);
-    const rel = path.relative(this.root, resolved);
-    if (rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("只能打开工作目录内的文件");
     if (path.extname(resolved).toLowerCase() !== ".html") throw new Error("只支持 .html 文件");
     const html = await readFile(resolved, "utf8");
     this.filePath = resolved;

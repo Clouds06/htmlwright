@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertCircle, Check, CheckCircle2, ChevronDown, ChevronRight, Eye, FileCode2,
-  Focus, Layers, LoaderCircle, MousePointer2, PanelLeftClose, Plus, RefreshCw,
+  AlertCircle, ArrowUp, Check, CheckCircle2, ChevronDown, ChevronRight, Eye, FileCode2,
+  Focus, Folder, Layers, LoaderCircle, MousePointer2, PanelLeftClose, Plus, RefreshCw,
   Send, Settings, ShieldCheck, Sparkles, Trash2, Undo2, Wand2, X, XCircle,
 } from "lucide-react";
 
@@ -72,7 +72,7 @@ export function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [settingsForm, setSettingsForm] = useState<SettingsForm>({ claudeExecutable: "", openaiApiKey: "", openaiBaseUrl: "", openaiModel: "" });
   const [showFiles, setShowFiles] = useState(false);
-  const [files, setFiles] = useState<Array<{ path: string; rel: string; name: string }>>([]);
+  const [browse, setBrowse] = useState<{ dir: string; parent: string | null; dirs: Array<{ name: string; path: string }>; files: Array<{ name: string; path: string }> }>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const multiPage = units.length > 1;
 
@@ -211,15 +211,15 @@ export function App() {
     }
   }, [settingsForm, refreshState]);
 
-  const openFileBrowser = useCallback(async () => {
+  const loadDir = useCallback(async (dir?: string) => {
     try {
-      const data = await api<{ files: Array<{ path: string; rel: string; name: string }> }>("/api/files");
-      setFiles(data.files);
-      setShowFiles(true);
+      const data = await api<{ dir: string; parent: string | null; dirs: Array<{ name: string; path: string }>; files: Array<{ name: string; path: string }> }>(`/api/files${dir ? `?dir=${encodeURIComponent(dir)}` : ""}`);
+      setBrowse(data);
     } catch (error) {
-      setNotice({ kind: "error", text: error instanceof Error ? error.message : "读取文件列表失败" });
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "读取目录失败" });
     }
   }, []);
+  const openFileBrowser = useCallback(async () => { await loadDir(); setShowFiles(true); }, [loadDir]);
   const openFile = useCallback(async (targetPath: string) => {
     try {
       await api("/api/open", { method: "POST", body: JSON.stringify({ path: targetPath }) });
@@ -459,15 +459,17 @@ export function App() {
       {showFiles && (
         <div className="modal-backdrop" onClick={() => setShowFiles(false)}>
           <div className="modal" onClick={event => event.stopPropagation()}>
-            <div className="modal-head"><div><span className="eyebrow">工作目录</span><strong>打开文件</strong></div><button className="icon-btn-sm" onClick={() => setShowFiles(false)}><X size={16} /></button></div>
+            <div className="modal-head"><div><span className="eyebrow">浏览本机目录</span><strong>打开文件</strong></div><button className="icon-btn-sm" onClick={() => setShowFiles(false)}><X size={16} /></button></div>
+            <div className="dir-path" title={browse?.dir}>{browse?.dir || "…"}</div>
             <ul className="file-list">
-              {files.length ? files.map(item => (
-                <li key={item.path}>
-                  <button className={`file-row ${item.path === state?.file.path ? "active" : ""}`} onClick={() => openFile(item.path)}>
-                    <FileCode2 size={15} /><span className="file-rel">{item.rel}</span>{item.path === state?.file.path && <Check size={14} />}
-                  </button>
-                </li>
-              )) : <li className="file-empty">工作目录下没有其他 HTML 文件</li>}
+              {browse?.parent && <li><button className="file-row is-dir" onClick={() => loadDir(browse.parent!)}><ArrowUp size={15} /><span className="file-rel">..（上一级）</span></button></li>}
+              {browse?.dirs.map(item => (
+                <li key={item.path}><button className="file-row is-dir" onClick={() => loadDir(item.path)}><Folder size={15} /><span className="file-rel">{item.name}</span><ChevronRight size={14} /></button></li>
+              ))}
+              {browse?.files.map(item => (
+                <li key={item.path}><button className={`file-row ${item.path === state?.file.path ? "active" : ""}`} onClick={() => openFile(item.path)}><FileCode2 size={15} /><span className="file-rel">{item.name}</span>{item.path === state?.file.path && <Check size={14} />}</button></li>
+              ))}
+              {browse && browse.dirs.length === 0 && browse.files.length === 0 && <li className="file-empty">此目录没有子目录或 HTML 文件</li>}
             </ul>
           </div>
         </div>
