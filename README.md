@@ -2,137 +2,153 @@
 
 *English · [简体中文](./README.zh-CN.md)*
 
-A local, AI-native visual editor for single-file HTML documents. Preview the HTML
-in a real browser, click an element, and describe the change in plain language.
-The candidate result stays in memory — it is only written back to the file after
-you review the code diff and a visual check.
+Click an element in a real browser, describe the change in one sentence. htmlwright shows a **code diff** and a **safety check** first (it screenshots before/after to confirm the target actually changed and nothing overflowed or shifted), and only writes back to the file once you approve.
 
-> **Platform:** macOS only for now (file paths, browser discovery, and native-host
-> registration are macOS-specific). Windows / Linux contributions are welcome.
+It doesn't generate pages from scratch — it makes **referenceable, verifiable, reversible** edits on an existing single-file HTML. Everything stays on your machine; the original is snapshotted before every write-back, so a bad edit is undoable.
 
-## Requirements
+![htmlwright web workspace](./assets/screenshot-web.png)
 
-- macOS
-- Node.js >= 20.11
-- One of Google Chrome / Chromium / Microsoft Edge
-- A model backend — any one of: the Claude Code CLI (signed in), an `ANTHROPIC_API_KEY`, or any OpenAI-compatible endpoint (OpenAI / OpenRouter / local Ollama, via `HTMLWRIGHT_OPENAI_API_KEY`)
+## What it does
 
-## How it works
+- **Point and edit** — click an element on the real page, say what you want in plain language.
+- **Quick edit (no AI)** — change text / color / font size directly at the source level, instant and free.
+- **AI edit** — Claude Code / Anthropic API / any OpenAI-compatible model (paste a key in the UI, no config files).
+- **Review before write** — code diff + before/after comparison + safety checks (collateral changes, overflow, overlap) before anything hits disk.
+- **Version timeline** — every accumulated change is clickable: replay that version and jump to the element it touched.
+- **Queue while generating** — submit several AI edits back to back without waiting; they apply serially.
+- **Fully local** — auto-snapshot before write-back, undoable; nothing is uploaded.
 
-You point at an element and write an intent; a provider (local Claude Code by
-default) rewrites the file. Before anything touches disk, htmlwright shows a code
-diff and runs a visual verification (Playwright screenshots, before/after pixel
-diff) that flags whether the target actually changed, whether unrelated regions
-moved, and whether content overflows or overlaps. You then **accept** (write back,
-after snapshotting the original) or **reject** (discard).
+> Want to try it right now? After installing dependencies, run the bundled sample: `node dist/server/cli.js sample/landing.html` (build first with `npm run build`).
 
-There are two entry points that share the same core:
+---
 
-| Path | Entry | Use |
-|------|-------|-----|
-| **Chrome extension + native host** (recommended) | open a `file://` HTML directly | daily use, no server to keep running |
-| **localhost web app** (`npm run dev`) | React SPA + Express | development / screenshot review |
+# 1. User Guide
 
-## Chrome extension (recommended)
+Both entry points edit **HTML files on your machine** — the only difference is how you get in. Not sure which? See [Which one](#which-one).
 
-The extension lets you select and review directly on a `file://` HTML opened in
-Chrome. A native host invokes local Claude Code on demand, runs the visual
-verification, and writes back safely — no localhost server needed.
+## First-time setup (needed for both)
+
+A few one-time terminal commands; after that it's just the mouse.
+
+1. Install [Node.js](https://nodejs.org) (20+):
+   - macOS: `brew install node`
+   - Windows: `winget install OpenJS.NodeJS.LTS`
+2. Get the project and install dependencies:
+   ```bash
+   git clone https://github.com/Clouds06/htmlwright.git
+   cd htmlwright
+   npm install
+   ```
+
+## Option A: Chrome extension (recommended)
+
+Open a local HTML file in Chrome, click the extension icon, select an element in the side panel and describe the change — no server to keep running.
+
+Install the extension, the native host, and record the AI backend path. The command prints an **extension directory** used in the next step:
 
 ```bash
+cd htmlwright
 npm run native:install
 ```
 
-First-time setup:
+In Chrome:
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**, click **Load unpacked**.
-3. Select the extension directory printed by the install command.
-4. Open the extension details and enable **Allow access to file URLs**.
-5. Open a local HTML file in Chrome and click the htmlwright toolbar icon.
+1. Open `chrome://extensions`, turn on **Developer mode**.
+2. Click **Load unpacked** and select the printed extension directory:
+   - macOS: `~/Library/Application Support/htmlwright/extension`
+   - Windows: `%LOCALAPPDATA%\htmlwright\extension`
+3. Open the extension details and enable **Allow access to file URLs**.
 
-After that the daily flow is just: open HTML → open the extension → click and edit.
-The extension only requests `file://`, `localhost`, and `127.0.0.1` host access; it
-does not inject into normal websites.
+Daily flow, three steps: open the local HTML → click the extension icon → select an element, describe the change, review and accept or reject.
 
-Selecting an element switches the scope to **element**, and the target of the
-current intent is shown above the input. **Quick edit** changes a leaf node's text,
-text color, background color, and font size without calling Claude. After a
-candidate is generated you can keep selecting elements on the candidate page;
-multiple quick or AI edits accumulate into the same candidate. **Accept & write
-back** saves and clears the list; **Reject** discards everything not yet written.
+- Just reading? Don't click the icon — the extension stays dormant and won't touch the page.
+- For small tweaks (text, color, size), use **Quick edit** — no AI, instant, free.
+- Select several elements in a row to accumulate changes, then **Accept & write back** together; **Reject** discards anything not yet written.
 
-While Claude Code is generating you can still submit more intents — the button
-becomes **Add to generation queue**. Each job pins its target and scope on enqueue
-and runs serially, always building on the previously succeeded candidate so
-parallel results never overwrite each other.
+## Option B: Local command line
 
-Claude Code loads from `~/.local/bin/claude` by default; the installer records the
-detected absolute path. If detection fails the extension prompts for the path (also
-editable anytime via the gear next to **AI backend**). Settings are stored at
-`~/Library/Application Support/htmlwright/config.json`.
-
-If you install the published package globally, run `htmlwright-install-native` to
-install and `htmlwright-uninstall-native` to remove it.
-
-## localhost web app (development)
+No extension. Build once, then open any file in a local web page (same interaction as the side panel, plus before/after screenshots):
 
 ```bash
-npm install
-npm run dev
+cd htmlwright
+npm run build                                   # build (first time / after updates)
+node dist/server/cli.js /absolute/path/page.html   # open your file
 ```
 
-The dev server opens the sample file at `http://localhost:4178`.
+Common flags: `--port` sets the port; `--no-open` skips auto-opening the browser; `--in-place` writes the candidate immediately (a snapshot is still kept).
 
-To run against your own file:
+## Which one
+
+| | Option A (extension) | Option B (CLI) |
+|---|---|---|
+| Best for | frequent, iterative edits | quick one-off edits |
+| After setup | mouse only | one command each time |
+| Screenshot comparison | checks summary only | full before/after screenshots |
+
+## Configuring the AI backend
+
+htmlwright ships no model of its own — connect one. Three options:
+
+1. **Already using Claude Code** (`claude` installed and signed in): zero config, enabled by default.
+2. **Have an API key** (OpenAI / OpenRouter / SiliconFlow / local Ollama): click the gear next to **Model**, fill in the API key, base URL and model, save. **Recommended for non-technical users.**
+3. **Have an Anthropic key**: set `ANTHROPIC_API_KEY` and pick Anthropic API in the UI.
+
+> ⚠️ Choose a general-purpose or code model (DeepSeek-V3, Qwen-Coder, GPT-4o, Claude, …). Translation-only small models (names containing MT / Translation) won't return complete HTML and will fail with "no complete HTML".
+
+---
+
+# 2. Developer Guide
+
+## Local development
 
 ```bash
-npm run build
-node dist/server/cli.js /absolute/path/to/page.html
+cd htmlwright
+npm install      # install dependencies
+npm run dev      # dev server on the sample file at http://localhost:4178
+npm run build    # type-check + bundle
+npm run check    # unit tests + extension structure check + typecheck
 ```
 
-Flags:
+## Core structure
 
-- `--port 4178` — set the local port.
-- `--no-open` — don't open a browser automatically.
-- `--in-place` — write the candidate back immediately (a snapshot is still kept).
+- `server/session.ts` — candidate / write-back / snapshot / undo state machine (shared by both entry points).
+- `server/providers.ts` — model backend factory and the `LLMProvider` interface (Claude Code / Anthropic API / OpenAI-compatible / demo).
+- `server/verifier.ts` — Playwright screenshots and per-unit visual verification.
+- `server/quick-edit.ts` — parse5 source-level rewrites (no model call).
+- `server/platform.ts` — cross-platform paths and commands.
+- `server/native-host.ts` — native messaging host for the extension.
+- `extension/` — Chrome MV3: `content-script` / `sidepanel` / `service-worker`.
+- `scripts/` — native host install / uninstall (directory on macOS, registry on Windows).
 
-The default provider is local Claude Code, which requires `claude auth status` to
-report signed-in and no `ANTHROPIC_API_KEY` in the environment. To use the Anthropic
-API directly, set that variable and pick **Anthropic API** in the UI.
-
-Before each accept, the original file is snapshotted to `.htmlwright/snapshots/` in
-the same directory. Preview injection only exists in the HTTP response — it never
-reaches the file on disk.
-
-Scopes are: element, current content unit, current page, and the whole HTML. Use
-**whole HTML** to restyle an entire deck; use **page** to change only the current slide.
-
-## Configuration
-
-Environment variables (all optional) — see [`.env.example`](./.env.example):
+## Environment variables (all optional, see [`.env.example`](./.env.example))
 
 | Variable | Purpose |
-|----------|---------|
+|---|---|
 | `ANTHROPIC_API_KEY` | enable the Anthropic API provider |
-| `HTMLWRIGHT_MODEL` | model id for the Anthropic API provider (default `claude-sonnet-4-5`) |
+| `HTMLWRIGHT_MODEL` | Anthropic API model id (default `claude-sonnet-4-5`) |
 | `HTMLWRIGHT_OPENAI_API_KEY` | enable the OpenAI-compatible provider (or reuse `OPENAI_API_KEY`) |
-| `HTMLWRIGHT_OPENAI_BASE_URL` | OpenAI-compatible base URL (default `https://api.openai.com/v1`; e.g. OpenRouter, local Ollama) |
-| `HTMLWRIGHT_OPENAI_MODEL` | model id for the OpenAI-compatible provider (default `gpt-4o`) |
+| `HTMLWRIGHT_OPENAI_BASE_URL` | OpenAI-compatible base URL (default `https://api.openai.com/v1`) |
+| `HTMLWRIGHT_OPENAI_MODEL` | OpenAI-compatible model id (default `gpt-4o`) |
 | `HTMLWRIGHT_CLAUDE_EXECUTABLE` | path to the Claude Code executable |
 | `HTMLWRIGHT_CONFIG_FILE` | override the config file location |
-| `HTMLWRIGHT_ENABLE_DEMO` | set to `1` to enable the demo provider (no model call) |
+| `HTMLWRIGHT_ENABLE_DEMO` | set `1` to enable the demo provider (no model call) |
 | `PLAYWRIGHT_CHROMIUM_EXECUTABLE` | browser executable for visual verification |
 
-## Checks
+## Safe write-back
 
-```bash
-npm run check
-```
+Before accepting, the original is snapshotted to `.htmlwright/snapshots/` in the same directory. Preview injection only exists in the HTTP response — it never reaches disk. Visual verification prefers Playwright's bundled Chromium, falling back to a locally installed Chrome / Edge.
 
-Visual verification prefers Playwright's bundled Chromium, then a Chrome/Chromium/Edge
-installed on macOS. You can point it at a specific browser with
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
+After a global install of the published package, use `htmlwright-install-native` to install and `htmlwright-uninstall-native` to remove the native host.
+
+## Distribution
+
+For now you **clone and build it yourself** (see above). `package.json` already declares `bin` / `files`, so after `npm publish` it can run via `npx htmlwright file.html` with no clone, or be installed globally — publishing is planned.
+
+## Platform support
+
+- **macOS** — fully supported.
+- **Windows** — experimental (native host via registry, `.bat` wrapper), not yet thoroughly verified.
+- **Linux** — not adapted yet, contributions welcome.
 
 ## License
 
