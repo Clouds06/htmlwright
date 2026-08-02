@@ -117,7 +117,10 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
     response.json({ current: session.filePath, ...(await listDir(dir)) });
   }));
   app.post("/api/open", asyncRoute(async (request, response) => {
-    await session.openFile((request.body as { path: string }).path);
+    const body = request.body as { path?: string; relative?: string };
+    const target = body.relative ? path.resolve(session.directory, body.relative) : body.path;
+    if (!target) throw new Error("缺少文件路径");
+    await session.openFile(target);
     await rewatch();
     broadcast("state", statePayload());
     broadcast("preview", { reason: "opened" });

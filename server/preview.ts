@@ -89,7 +89,22 @@ const BRIDGE = String.raw`
     rect(el, hover);
   }, true);
   document.addEventListener('click', event => {
-    if (!selecting) return;
+    if (!selecting) {
+      // View mode: hand local .html links to the parent so it can open them for editing;
+      // block external navigation from leaving the preview; let same-page anchors scroll.
+      const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      if (!anchor) return;
+      const url = new URL(anchor.href);
+      const isLocalHtml = url.origin === location.origin && url.pathname.startsWith('/target-assets/') && url.pathname.toLowerCase().endsWith('.html');
+      const isInPageHash = url.pathname === location.pathname && !!url.hash;
+      if (isLocalHtml) {
+        event.preventDefault();
+        parent.postMessage({ type: 'htmlwright:navigate', file: decodeURIComponent(url.pathname.slice('/target-assets/'.length)) }, '*');
+      } else if (!isInPageHash) {
+        event.preventDefault();
+      }
+      return;
+    }
     const el = event.target instanceof Element ? event.target.closest('[data-htmlwright-id]') : null;
     if (!el) return;
     event.preventDefault(); event.stopPropagation();

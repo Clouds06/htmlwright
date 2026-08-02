@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertCircle, ArrowUp, Check, CheckCircle2, ChevronDown, ChevronRight, Eye, FileCode2,
+  AlertCircle, ArrowLeft, ArrowUp, Check, CheckCircle2, ChevronDown, ChevronRight, Eye, FileCode2,
   Focus, Folder, Layers, LoaderCircle, MousePointer2, PanelLeftClose, Plus, RefreshCw,
   Send, Settings, ShieldCheck, Sparkles, Trash2, Undo2, Wand2, X, XCircle,
 } from "lucide-react";
@@ -73,6 +73,7 @@ export function App() {
   const [settingsForm, setSettingsForm] = useState<SettingsForm>({ claudeExecutable: "", openaiApiKey: "", openaiBaseUrl: "", openaiModel: "" });
   const [showFiles, setShowFiles] = useState(false);
   const [browse, setBrowse] = useState<{ dir: string; parent: string | null; dirs: Array<{ name: string; path: string }>; files: Array<{ name: string; path: string }> }>();
+  const [fileHistory, setFileHistory] = useState<string[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const multiPage = units.length > 1;
 
@@ -224,12 +225,39 @@ export function App() {
     try {
       await api("/api/open", { method: "POST", body: JSON.stringify({ path: targetPath }) });
       setShowFiles(false);
+      setFileHistory([]);
       setIntent(""); setQueue([]); setSelected(undefined);
       await refreshState();
     } catch (error) {
       setNotice({ kind: "error", text: error instanceof Error ? error.message : "打开文件失败" });
     }
   }, [refreshState]);
+  const goBack = useCallback(async () => {
+    const previous = fileHistory[fileHistory.length - 1];
+    if (!previous) return;
+    setFileHistory(list => list.slice(0, -1));
+    try {
+      await api("/api/open", { method: "POST", body: JSON.stringify({ path: previous }) });
+      setIntent(""); setQueue([]); setSelected(undefined);
+      await refreshState();
+    } catch (error) {
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "返回失败" });
+    }
+  }, [fileHistory, refreshState]);
+
+  // Clicking a local .html link in the preview (view mode) opens it for editing.
+  useEffect(() => {
+    const listener = (event: MessageEvent) => {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      if (event.data?.type !== "htmlwright:navigate" || typeof event.data.file !== "string") return;
+      const previous = state?.file.path;
+      api("/api/open", { method: "POST", body: JSON.stringify({ relative: event.data.file }) })
+        .then(() => { if (previous) setFileHistory(list => [...list, previous]); setIntent(""); setQueue([]); setSelected(undefined); return refreshState(); })
+        .catch(error => setNotice({ kind: "error", text: error instanceof Error ? error.message : "打开链接失败" }));
+    };
+    window.addEventListener("message", listener);
+    return () => window.removeEventListener("message", listener);
+  }, [state?.file.path, refreshState]);
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
@@ -258,7 +286,10 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand"><span className="brand-mark"><Focus size={18} /></span><strong>htmlwright</strong></div>
-        <button className="file-identity" onClick={openFileBrowser} title="切换文件"><FileCode2 size={16} /><span>{state?.file.name || "正在载入文件"}</span><ChevronDown size={14} /></button>
+        <div className="file-cell">
+          {fileHistory.length > 0 && <button className="back-btn" onClick={goBack} title="返回上一个文件"><ArrowLeft size={15} />返回</button>}
+          <button className="file-identity" onClick={openFileBrowser} title="切换文件"><FileCode2 size={16} /><span>{state?.file.name || "正在载入文件"}</span><ChevronDown size={14} /></button>
+        </div>
         <div className="header-status">
           <span className={`mode-badge ${mode}`}><span className="status-dot" />{mode === "unit" ? "内容单元模式" : "整页模式"}</span>
         </div>
