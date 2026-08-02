@@ -1,5 +1,6 @@
 import { createServer as createHttpServer, type Server } from "node:http";
 import { randomBytes } from "node:crypto";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
 import chokidar from "chokidar";
 import express, { type Express, type Response } from "express";
@@ -60,6 +61,39 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
     clients.forEach(client => client.write(data));
   }
 
+  const watchOptions = { ignoreInitial: true, awaitWriteFinish: { stabilityThreshold: 120, pollInterval: 25 } } as const;
+  const onFileChange = async () => {
+    const result = await session.onExternalChange();
+    if (result !== "ignored") {
+      broadcast("state", statePayload());
+      if (result === "reloaded") broadcast("preview", { reason: "external-change" });
+    }
+  };
+  let watcher = chokidar.watch(session.filePath, watchOptions);
+  watcher.on("change", onFileChange);
+  const rewatch = async () => {
+    await watcher.close();
+    watcher = chokidar.watch(session.filePath, watchOptions);
+    watcher.on("change", onFileChange);
+  };
+
+  // List every .html file under the working root so the UI can switch files without a restart.
+  async function listHtmlFiles(): Promise<Array<{ path: string; rel: string; name: string }>> {
+    const out: Array<{ path: string; rel: string; name: string }> = [];
+    const walk = async (dir: string, depth: number): Promise<void> => {
+      if (depth > 4 || out.length > 200) return;
+      const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+      for (const entry of entries) {
+        if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) await walk(full, depth + 1);
+        else if (entry.isFile() && entry.name.toLowerCase().endsWith(".html")) out.push({ path: full, rel: path.relative(session.root, full), name: entry.name });
+      }
+    };
+    await walk(session.root, 0);
+    return out.sort((a, b) => a.rel.localeCompare(b.rel));
+  }
+
   const allowedHosts = new Set([`localhost:${options.port}`, `127.0.0.1:${options.port}`]);
   app.use((request, response, next) => {
     if (request.headers.host && !allowedHosts.has(request.headers.host)) {
@@ -77,6 +111,16 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
     next();
   });
   app.get("/api/state", (_request, response) => response.json(statePayload()));
+  app.get("/api/files", asyncRoute(async (_request, response) => {
+    response.json({ root: session.root, current: session.filePath, files: await listHtmlFiles() });
+  }));
+  app.post("/api/open", asyncRoute(async (request, response) => {
+    await session.openFile((request.body as { path: string }).path);
+    await rewatch();
+    broadcast("state", statePayload());
+    broadcast("preview", { reason: "opened" });
+    response.json(statePayload());
+  }));
   app.get("/api/events", (request, response) => {
     response.setHeader("Content-Type", "text/event-stream");
     response.setHeader("Cache-Control", "no-cache");
@@ -161,14 +205,6 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(options.port, "127.0.0.1", () => { server.off("error", reject); resolve(); });
-  });
-  const watcher = chokidar.watch(session.filePath, { ignoreInitial: true, awaitWriteFinish: { stabilityThreshold: 120, pollInterval: 25 } });
-  watcher.on("change", async () => {
-    const result = await session.onExternalChange();
-    if (result !== "ignored") {
-      broadcast("state", statePayload());
-      if (result === "reloaded") broadcast("preview", { reason: "external-change" });
-    }
   });
   return {
     url: `http://localhost:${options.port}`,

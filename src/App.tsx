@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertCircle, Check, CheckCircle2, ChevronRight, Eye, FileCode2,
+  AlertCircle, Check, CheckCircle2, ChevronDown, ChevronRight, Eye, FileCode2,
   Focus, Layers, LoaderCircle, MousePointer2, PanelLeftClose, Plus, RefreshCw,
   Send, Settings, ShieldCheck, Sparkles, Trash2, Undo2, Wand2, X, XCircle,
 } from "lucide-react";
@@ -71,6 +71,8 @@ export function App() {
   const [viewingChange, setViewingChange] = useState<number>();
   const [showSettings, setShowSettings] = useState(false);
   const [settingsForm, setSettingsForm] = useState<SettingsForm>({ claudeExecutable: "", openaiApiKey: "", openaiBaseUrl: "", openaiModel: "" });
+  const [showFiles, setShowFiles] = useState(false);
+  const [files, setFiles] = useState<Array<{ path: string; rel: string; name: string }>>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const multiPage = units.length > 1;
 
@@ -209,6 +211,26 @@ export function App() {
     }
   }, [settingsForm, refreshState]);
 
+  const openFileBrowser = useCallback(async () => {
+    try {
+      const data = await api<{ files: Array<{ path: string; rel: string; name: string }> }>("/api/files");
+      setFiles(data.files);
+      setShowFiles(true);
+    } catch (error) {
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "读取文件列表失败" });
+    }
+  }, []);
+  const openFile = useCallback(async (targetPath: string) => {
+    try {
+      await api("/api/open", { method: "POST", body: JSON.stringify({ path: targetPath }) });
+      setShowFiles(false);
+      setIntent(""); setQueue([]); setSelected(undefined);
+      await refreshState();
+    } catch (error) {
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "打开文件失败" });
+    }
+  }, [refreshState]);
+
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       const mod = event.metaKey || event.ctrlKey;
@@ -236,7 +258,7 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand"><span className="brand-mark"><Focus size={18} /></span><strong>htmlwright</strong></div>
-        <div className="file-identity" title={state?.file.path}><FileCode2 size={16} /><span>{state?.file.name || "正在载入文件"}</span></div>
+        <button className="file-identity" onClick={openFileBrowser} title="切换文件"><FileCode2 size={16} /><span>{state?.file.name || "正在载入文件"}</span><ChevronDown size={14} /></button>
         <div className="header-status">
           <span className={`mode-badge ${mode}`}><span className="status-dot" />{mode === "unit" ? "内容单元模式" : "整页模式"}</span>
         </div>
@@ -430,6 +452,23 @@ export function App() {
               <button className="btn-modal-cancel" onClick={() => setShowSettings(false)}>取消</button>
               <button className="btn-modal-save" onClick={saveSettings}>保存</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showFiles && (
+        <div className="modal-backdrop" onClick={() => setShowFiles(false)}>
+          <div className="modal" onClick={event => event.stopPropagation()}>
+            <div className="modal-head"><div><span className="eyebrow">工作目录</span><strong>打开文件</strong></div><button className="icon-btn-sm" onClick={() => setShowFiles(false)}><X size={16} /></button></div>
+            <ul className="file-list">
+              {files.length ? files.map(item => (
+                <li key={item.path}>
+                  <button className={`file-row ${item.path === state?.file.path ? "active" : ""}`} onClick={() => openFile(item.path)}>
+                    <FileCode2 size={15} /><span className="file-rel">{item.rel}</span>{item.path === state?.file.path && <Check size={14} />}
+                  </button>
+                </li>
+              )) : <li className="file-empty">工作目录下没有其他 HTML 文件</li>}
+            </ul>
           </div>
         </div>
       )}

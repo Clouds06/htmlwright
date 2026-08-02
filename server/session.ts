@@ -68,8 +68,9 @@ function contentHash(content: string): string {
 }
 
 export class ProjectSession {
-  readonly filePath: string;
-  readonly directory: string;
+  filePath: string;
+  directory: string;
+  readonly root: string;
   diskHtml: string;
   candidateHtml: string;
   baselineHtml: string;
@@ -82,9 +83,31 @@ export class ProjectSession {
   private constructor(filePath: string, html: string, readonly inPlace: boolean) {
     this.filePath = filePath;
     this.directory = path.dirname(filePath);
+    this.root = path.dirname(filePath);
     this.diskHtml = html;
     this.candidateHtml = html;
     this.baselineHtml = html;
+  }
+
+  // Re-target the session to another HTML file inside the working root. The previous
+  // file's persisted pending is left on disk, so switching back restores it.
+  async openFile(target: string): Promise<void> {
+    const resolved = path.resolve(target);
+    const rel = path.relative(this.root, resolved);
+    if (rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("只能打开工作目录内的文件");
+    if (path.extname(resolved).toLowerCase() !== ".html") throw new Error("只支持 .html 文件");
+    const html = await readFile(resolved, "utf8");
+    this.filePath = resolved;
+    this.directory = path.dirname(resolved);
+    this.diskHtml = html;
+    this.candidateHtml = html;
+    this.baselineHtml = html;
+    this.pending = undefined;
+    this.changeSnapshots = {};
+    this.conflict = false;
+    this.undoStack = [];
+    this.expectedDiskHtml = undefined;
+    await this.restorePending();
   }
 
   static async create(filePath: string, inPlace = false): Promise<ProjectSession> {
