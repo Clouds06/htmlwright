@@ -39,6 +39,7 @@ interface StoredPendingEdit {
   baselineHtml: string;
   candidateHtml: string;
   pending: PendingEdit;
+  changeSnapshots?: Record<string, string>;
 }
 
 function targetSummary(element?: ElementSummary): ChangeRecord["target"] {
@@ -75,6 +76,7 @@ export class ProjectSession {
   pending?: PendingEdit;
   conflict = false;
   private undoStack: string[] = [];
+  private changeSnapshots: Record<string, string> = {};
   private expectedDiskHtml?: string;
 
   private constructor(filePath: string, html: string, readonly inPlace: boolean) {
@@ -101,6 +103,14 @@ export class ProjectSession {
       providers: providerStatuses,
       inPlace: this.inPlace,
     };
+  }
+
+  // Candidate HTML captured after each change, keyed by change id (persisted with the
+  // pending edit). Lets the UI replay any step; falls back to the latest candidate when
+  // a step has no snapshot (e.g. a pending restored from an older format).
+  changeSnapshot(index: number): string {
+    const change = this.pending?.changes[index];
+    return (change && this.changeSnapshots[change.id]) || this.candidateHtml;
   }
 
   async edit(request: EditRequest, baseUrl?: string): Promise<PendingEdit> {
@@ -138,6 +148,7 @@ export class ProjectSession {
       changes: [...this.pendingChanges(), change],
     };
     this.pending = pending;
+    this.changeSnapshots[change.id] = this.candidateHtml;
     await this.persistPending();
     if (this.inPlace) await this.accept();
     return pending;
@@ -170,6 +181,7 @@ export class ProjectSession {
       changes: [...this.pendingChanges(), change],
     };
     this.pending = pending;
+    this.changeSnapshots[change.id] = this.candidateHtml;
     await this.persistPending();
     if (this.inPlace) await this.accept();
     return pending;
@@ -184,6 +196,7 @@ export class ProjectSession {
     this.diskHtml = this.candidateHtml;
     this.baselineHtml = this.candidateHtml;
     this.pending = undefined;
+    this.changeSnapshots = {};
     this.conflict = false;
     await this.removePersistedPending();
     return { snapshot };
@@ -193,6 +206,7 @@ export class ProjectSession {
     this.candidateHtml = this.diskHtml;
     this.baselineHtml = this.diskHtml;
     this.pending = undefined;
+    this.changeSnapshots = {};
     this.conflict = false;
     await this.removePersistedPending();
   }
@@ -225,6 +239,7 @@ export class ProjectSession {
     this.diskHtml = html;
     this.candidateHtml = html;
     this.baselineHtml = html;
+    this.changeSnapshots = {};
     return "reloaded";
   }
 
@@ -263,6 +278,7 @@ export class ProjectSession {
       baselineHtml: this.baselineHtml,
       candidateHtml: this.candidateHtml,
       pending: this.pending,
+      changeSnapshots: this.changeSnapshots,
     };
     await writeFile(this.pendingFile, JSON.stringify(stored), "utf8");
   }
@@ -286,6 +302,7 @@ export class ProjectSession {
             legacy: true,
           }],
       };
+      this.changeSnapshots = stored.changeSnapshots ?? {};
     } catch { /* no valid pending edit to restore */ }
   }
 

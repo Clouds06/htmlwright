@@ -4,9 +4,10 @@ import path from "node:path";
 import chokidar from "chokidar";
 import express, { type Express, type Response } from "express";
 import { createProvider } from "./providers.ts";
+import { defaultClaudeExecutable } from "./platform.ts";
 import { injectPreview } from "./preview.ts";
 import { ProjectSession } from "./session.ts";
-import type { EditRequest, ProviderName, ProviderStatus } from "./types.ts";
+import type { EditRequest, ProviderName, ProviderStatus, QuickEditRequest } from "./types.ts";
 
 export interface AppOptions {
   filePath: string;
@@ -35,16 +36,24 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
   const clients = new Set<Response>();
   const providerNames: ProviderName[] = ["claude-code", "anthropic-api", "openai-compatible", "demo"];
   let providerStatuses: ProviderStatus[] = providerNames.map(name => ({ name, available: false, message: "正在检查" }));
-  Promise.all(providerNames.map(name => createProvider(name).status())).then(statuses => {
-    providerStatuses = statuses;
-    broadcast("state", statePayload());
+  const settingsPayload = () => ({
+    claudeExecutable: process.env.HTMLWRIGHT_CLAUDE_EXECUTABLE,
+    defaultClaudeExecutable: defaultClaudeExecutable(),
+    openaiApiKey: process.env.HTMLWRIGHT_OPENAI_API_KEY,
+    openaiBaseUrl: process.env.HTMLWRIGHT_OPENAI_BASE_URL,
+    openaiModel: process.env.HTMLWRIGHT_OPENAI_MODEL,
   });
-
   const statePayload = () => ({
     ...session.summary(providerStatuses),
     apiToken,
     previewUrl: `http://localhost:${options.port}/preview?version=candidate`,
+    settings: settingsPayload(),
   });
+  async function refreshProviders() {
+    providerStatuses = await Promise.all(providerNames.map(name => createProvider(name).status()));
+    broadcast("state", statePayload());
+  }
+  refreshProviders();
 
   function broadcast(event: string, payload: unknown) {
     const data = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
@@ -79,7 +88,12 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
   });
   app.get("/preview", (request, response) => {
     const version = request.query.version;
-    const html = version === "baseline" ? session.baselineHtml : session.candidateHtml;
+    const changeParam = request.query.change;
+    const html = version === "baseline"
+      ? session.baselineHtml
+      : changeParam !== undefined
+        ? session.changeSnapshot(Number(changeParam))
+        : session.candidateHtml;
     response.setHeader("Content-Type", "text/html; charset=utf-8");
     response.setHeader("Cache-Control", "no-store");
     response.send(injectPreview(html));
@@ -87,6 +101,25 @@ export async function createApp(options: AppOptions): Promise<RunningApp> {
   app.use("/target-assets", express.static(session.directory, { fallthrough: false, index: false, dotfiles: "ignore" }));
   app.post("/api/edit", asyncRoute(async (request, response) => {
     const result = await session.edit(request.body as EditRequest, `http://127.0.0.1:${options.port}`);
+    broadcast("state", statePayload());
+    broadcast("preview", { reason: "candidate" });
+    response.json(result);
+  }));
+  app.post("/api/configure", asyncRoute(async (request, response) => {
+    const body = request.body as { claudeExecutable?: string; openaiApiKey?: string; openaiBaseUrl?: string; openaiModel?: string };
+    const setEnv = (key: string, value?: string) => {
+      const trimmed = value?.trim();
+      if (trimmed) process.env[key] = trimmed; else delete process.env[key];
+    };
+    setEnv("HTMLWRIGHT_CLAUDE_EXECUTABLE", body.claudeExecutable);
+    setEnv("HTMLWRIGHT_OPENAI_API_KEY", body.openaiApiKey);
+    setEnv("HTMLWRIGHT_OPENAI_BASE_URL", body.openaiBaseUrl);
+    setEnv("HTMLWRIGHT_OPENAI_MODEL", body.openaiModel);
+    await refreshProviders();
+    response.json(statePayload());
+  }));
+  app.post("/api/quick-edit", asyncRoute(async (request, response) => {
+    const result = await session.quickEdit(request.body as QuickEditRequest);
     broadcast("state", statePayload());
     broadcast("preview", { reason: "candidate" });
     response.json(result);

@@ -95,8 +95,8 @@ const BRIDGE = String.raw`
     event.preventDefault(); event.stopPropagation();
     select(el);
   }, true);
-  addEventListener('scroll', () => { rect(highlightTarget, selected); }, true);
-  addEventListener('resize', () => { rect(highlightTarget, selected); });
+  addEventListener('scroll', () => { if (selecting) rect(highlightTarget, selected); }, true);
+  addEventListener('resize', () => { if (selecting) rect(highlightTarget, selected); });
   addEventListener('message', event => {
     const msg = event.data || {};
     if (msg.type === 'htmlwright:request-state') {
@@ -106,6 +106,9 @@ const BRIDGE = String.raw`
       selecting = Boolean(msg.enabled);
       document.documentElement.classList.toggle('htmlwright-selecting', selecting);
       hover.style.display = 'none';
+      // View mode hides the selection outline; switching back restores it on the last target.
+      if (selecting) rect(highlightTarget, selected);
+      else selected.style.display = 'none';
     }
     if (msg.type === 'htmlwright:select-id') {
       const el = document.querySelector('[data-htmlwright-id="' + CSS.escape(String(msg.id)) + '"]');
@@ -113,6 +116,15 @@ const BRIDGE = String.raw`
     }
     if (msg.type === 'htmlwright:scroll-unit') {
       document.querySelector('[data-htmlwright-unit="' + Number(msg.index) + '"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (msg.type === 'htmlwright:locate' && Array.isArray(msg.sourcePath)) {
+      let node = document.documentElement;
+      for (const index of msg.sourcePath) node = node && node.children ? node.children[index] : null;
+      if (node && node.nodeType === 1) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightTarget = node;
+        rect(node, selected);
+      }
     }
     if (msg.type === 'htmlwright:highlight-scope' && active) {
       highlightTarget = msg.scope === 'document'

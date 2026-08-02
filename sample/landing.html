@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>云图 · 数据协作平台</title>
+  <style>
+    :root {
+      --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --bg: #ffffff;
+      --brand: #4f46e5; --brand-2: #7c3aed; --soft: #eef2ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--bg); font: 16px/1.65 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+    .btn { display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; border: 1px solid transparent; }
+    .btn-primary { color: #fff; background: linear-gradient(135deg, var(--brand), var(--brand-2)); box-shadow: 0 8px 20px rgba(79,70,229,.28); }
+    .btn-ghost { color: var(--ink); background: #fff; border-color: var(--line); }
+    .eyebrow { display: inline-block; margin-bottom: 14px; padding: 5px 12px; border-radius: 999px; background: var(--soft); color: var(--brand); font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+    h1, h2, h3 { margin: 0; line-height: 1.2; letter-spacing: -.02em; }
+
+    /* nav */
+    .nav { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.85); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+    .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; }
+    .logo { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); }
+    .nav-links { display: flex; gap: 30px; color: var(--muted); font-size: 15px; font-weight: 500; }
+    .nav-links a:hover { color: var(--ink); }
+
+    /* hero */
+    .hero { padding: 92px 0 80px; text-align: center; background: radial-gradient(1000px 460px at 50% -10%, #eef2ff 0%, #ffffff 60%); }
+    .hero h1 { font-size: 54px; font-weight: 850; max-width: 820px; margin: 0 auto 22px; }
+    .hero .grad { background: linear-gradient(120deg, var(--brand), var(--brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p.lead { max-width: 620px; margin: 0 auto 34px; color: var(--muted); font-size: 19px; }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; }
+    .hero-board { max-width: 940px; margin: 60px auto 0; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 70px rgba(15,23,42,.14); background: #fff; }
+    .board-bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: #f8fafc; }
+    .board-bar i { width: 11px; height: 11px; border-radius: 50%; background: #cbd5e1; display: inline-block; }
+    .board-body { display: grid; grid-template-columns: 200px 1fr; min-height: 300px; }
+    .board-side { border-right: 1px solid var(--line); padding: 18px; background: #fbfcfe; }
+    .board-side .row { height: 12px; border-radius: 6px; background: #e9eefb; margin-bottom: 14px; }
+    .board-side .row.active { background: linear-gradient(90deg, var(--brand), var(--brand-2)); width: 70%; }
+    .board-main { padding: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-content: start; }
+    .board-card { border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+    .board-card .k { font-size: 26px; font-weight: 800; }
+    .board-card .l { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    /* logos */
+    .logos { padding: 46px 0; border-bottom: 1px solid var(--line); }
+    .logos p { text-align: center; color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+    .logo-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 42px; opacity: .7; font-weight: 700; font-size: 20px; color: #94a3b8; }
+
+    /* section base */
+    .block { padding: 88px 0; }
+    .block.alt { background: #f8fafc; }
+    .head { text-align: center; max-width: 640px; margin: 0 auto 54px; }
+    .head h2 { font-size: 38px; font-weight: 800; margin-bottom: 14px; }
+    .head p { color: var(--muted); font-size: 18px; margin: 0; }
+
+    /* features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature { padding: 30px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .feature .ico { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; background: var(--soft); font-size: 24px; margin-bottom: 18px; }
+    .feature h3 { font-size: 20px; margin-bottom: 10px; }
+    .feature p { color: var(--muted); margin: 0; font-size: 15px; }
+
+    /* metrics */
+    .metrics { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border-radius: 22px; padding: 54px 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
+    .metric .k { font-size: 44px; font-weight: 850; }
+    .metric .l { opacity: .82; margin-top: 6px; font-size: 15px; }
+
+    /* steps */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    .step .n { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--brand); color: #fff; font-weight: 800; margin-bottom: 16px; }
+    .step h3 { font-size: 19px; margin-bottom: 8px; }
+    .step p { color: var(--muted); margin: 0; font-size: 15px; }
+
+    /* testimonials */
+    .quotes { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .quote { padding: 30px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .quote blockquote { margin: 0 0 20px; font-size: 18px; line-height: 1.55; }
+    .quote .who { display: flex; align-items: center; gap: 12px; }
+    .quote .avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .quote .who b { display: block; font-size: 15px; }
+    .quote .who span { color: var(--muted); font-size: 13px; }
+
+    /* pricing */
+    .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: start; }
+    .plan { padding: 32px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+    .plan.featured { border-color: var(--brand); box-shadow: 0 20px 44px rgba(79,70,229,.16); position: relative; }
+    .plan.featured .tag { position: absolute; top: -13px; left: 32px; background: var(--brand); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+    .plan h3 { font-size: 18px; color: var(--muted); font-weight: 700; }
+    .plan .price { font-size: 44px; font-weight: 850; margin: 10px 0 4px; }
+    .plan .price span { font-size: 16px; font-weight: 500; color: var(--muted); }
+    .plan ul { list-style: none; padding: 0; margin: 22px 0; }
+    .plan li { padding: 8px 0 8px 26px; position: relative; font-size: 15px; color: #334155; border-top: 1px solid var(--line); }
+    .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--brand); font-weight: 800; }
+
+    /* faq */
+    .faq { max-width: 760px; margin: 0 auto; }
+    .qa { padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .qa h3 { font-size: 18px; margin-bottom: 8px; }
+    .qa p { color: var(--muted); margin: 0; font-size: 15px; }
+
+    /* cta */
+    .cta { text-align: center; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-radius: 24px; padding: 66px 40px; }
+    .cta h2 { font-size: 38px; font-weight: 850; margin-bottom: 14px; }
+    .cta p { opacity: .78; font-size: 18px; margin: 0 0 30px; }
+
+    /* footer */
+    footer { border-top: 1px solid var(--line); padding: 56px 0 40px; color: var(--muted); }
+    .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 30px; }
+    .foot-grid h4 { color: var(--ink); font-size: 15px; margin: 0 0 16px; }
+    .foot-grid a { display: block; font-size: 14px; padding: 5px 0; }
+    .foot-grid a:hover { color: var(--ink); }
+    .foot-bottom { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap">
+      <div class="brand"><span class="logo"></span>云图</div>
+      <div class="nav-links"><a href="#">产品</a><a href="#">方案</a><a href="#">价格</a><a href="#">客户</a><a href="#">文档</a></div>
+      <a class="btn btn-primary" href="#">免费开始</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow">全新 3.0 · 支持实时协作</span>
+      <h1>让团队数据<span class="grad">在同一个画布上流动</span></h1>
+      <p class="lead">云图把分散在表格、文档和看板里的数据连起来，实时同步、自动分析，让每个人都看到同一份真相。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#">免费试用 14 天</a>
+        <a class="btn btn-ghost" href="#">预约演示 →</a>
+      </div>
+      <div class="hero-board">
+        <div class="board-bar"><i></i><i></i><i></i></div>
+        <div class="board-body">
+          <aside class="board-side"><div class="row active"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></aside>
+          <div class="board-main">
+            <div class="board-card"><div class="k">¥2.4M</div><div class="l">本月营收</div></div>
+            <div class="board-card"><div class="k">18,204</div><div class="l">活跃用户</div></div>
+            <div class="board-card"><div class="k">96.2%</div><div class="l">任务准时率</div></div>
+            <div class="board-card"><div class="k">+34%</div><div class="l">环比增长</div></div>
+            <div class="board-card"><div class="k">7.8h</div><div class="l">平均响应</div></div>
+            <div class="board-card"><div class="k">42</div><div class="l">协作团队</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="logos">
+    <div class="wrap">
+      <p>已服务超过 4,000 家高速成长的团队</p>
+      <div class="logo-row"><span>星野科技</span><span>拾光传媒</span><span>方舟金融</span><span>青柠健康</span><span>栖梧设计</span></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">核心能力</span>
+        <h2>一个平台，三件事同时做好</h2>
+        <p>连接、分析、协作——不用在十几个工具之间来回切换。</p>
+      </div>
+      <div class="features">
+        <div class="feature"><div class="ico">🔗</div><h3>万物皆可连接</h3><p>数十种数据源一键接入，表格、数据库、API 实时同步，改一处、处处更新。</p></div>
+        <div class="feature"><div class="ico">📊</div><h3>看得懂的分析</h3><p>拖拽即出图，自动识别趋势与异常，把原始数字变成能直接汇报的结论。</p></div>
+        <div class="feature"><div class="ico">👥</div><h3>真正的协作</h3><p>评论、指派、版本回溯，团队在同一份数据上讨论，决策不再靠转发截图。</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="wrap">
+      <div class="metrics">
+        <div class="metric"><div class="k">4,000+</div><div class="l">付费团队</div></div>
+        <div class="metric"><div class="k">99.98%</div><div class="l">服务可用性</div></div>
+        <div class="metric"><div class="k">2.1 亿</div><div class="l">每日同步记录</div></div>
+        <div class="metric"><div class="k">40%</div><div class="l">平均效率提升</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block alt">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">如何开始</span>
+        <h2>三步，把数据搬上云图</h2>
+        <p>不需要工程师，业务同学十分钟就能跑通。</p>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>接入数据源</h3><p>选择你的表格或数据库，授权后自动读取，历史数据一并导入。</p></div>
+        <div class="step"><div class="n">2</div><h3>搭建看板</h3><p>拖拽字段生成图表和指标，保存为团队共享的实时看板。</p></div>
+        <div class="step"><div class="n">3</div><h3>邀请协作</h3><p>把成员拉进空间，设置权限，评论与指派让讨论沉淀在数据旁边。</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">客户怎么说</span>
+        <h2>他们把云图用成了团队的中枢</h2>
+      </div>
+      <div class="quotes">
+        <div class="quote">
+          <blockquote>"以前每周开会前要花两天整理数据，现在打开云图就是最新的，会议时间直接砍半。"</blockquote>
+          <div class="who"><span class="avatar"></span><div><b>林悦</b><span>星野科技 · 运营负责人</span></div></div>
+        </div>
+        <div class="quote">
+          <blockquote>"最打动我的是版本回溯——任何一个数字改动都有据可查，财务和业务终于不再互相甩锅。"</blockquote>
+          <div class="who"><span class="avatar"></span><div><b>陈屿</b><span>方舟金融 · 数据总监</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block alt">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">价格</span>
+        <h2>按团队规模，明码标价</h2>
+        <p>所有套餐都含核心分析与协作能力，随时升降级。</p>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <h3>入门版</h3>
+          <div class="price">¥0<span> / 月</span></div>
+          <p style="color:var(--muted);margin:0;font-size:14px;">适合刚起步的小团队</p>
+          <ul><li>最多 5 名成员</li><li>3 个数据源</li><li>基础图表</li><li>社区支持</li></ul>
+          <a class="btn btn-ghost" href="#" style="width:100%;text-align:center;">免费开始</a>
+        </div>
+        <div class="plan featured">
+          <span class="tag">最受欢迎</span>
+          <h3>团队版</h3>
+          <div class="price">¥199<span> / 月</span></div>
+          <p style="color:var(--muted);margin:0;font-size:14px;">成长期团队的主力选择</p>
+          <ul><li>最多 30 名成员</li><li>无限数据源</li><li>高级分析与预警</li><li>版本回溯</li><li>优先客服</li></ul>
+          <a class="btn btn-primary" href="#" style="width:100%;text-align:center;">立即升级</a>
+        </div>
+        <div class="plan">
+          <h3>企业版</h3>
+          <div class="price">定制<span></span></div>
+          <p style="color:var(--muted);margin:0;font-size:14px;">面向大型组织与合规需求</p>
+          <ul><li>不限成员</li><li>单点登录 SSO</li><li>私有化部署</li><li>专属客户成功经理</li></ul>
+          <a class="btn btn-ghost" href="#" style="width:100%;text-align:center;">联系我们</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">常见问题</span>
+        <h2>你可能想知道的</h2>
+      </div>
+      <div class="faq">
+        <div class="qa"><h3>数据安全吗？</h3><p>全链路加密传输与存储，通过等保三级认证，企业版支持私有化部署，数据不出内网。</p></div>
+        <div class="qa"><h3>需要工程师配合吗？</h3><p>不需要。可视化接入与拖拽建表面向业务同学设计，十分钟即可跑通第一个看板。</p></div>
+        <div class="qa"><h3>可以随时取消吗？</h3><p>可以。按月付费、随时升降级或取消，取消后数据仍可导出，不做任何锁定。</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="wrap">
+      <div class="cta">
+        <h2>让团队今天就用上同一份真相</h2>
+        <p>14 天免费试用，无需信用卡。</p>
+        <a class="btn btn-primary" href="#" style="background:#fff;color:#0f172a;">免费开始使用</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <div class="brand" style="margin-bottom:14px;"><span class="logo"></span>云图</div>
+          <p style="margin:0;max-width:260px;font-size:14px;">让每个团队都能像看地图一样看清自己的数据。</p>
+        </div>
+        <div><h4>产品</h4><a href="#">功能</a><a href="#">价格</a><a href="#">更新日志</a><a href="#">路线图</a></div>
+        <div><h4>资源</h4><a href="#">帮助中心</a><a href="#">开发文档</a><a href="#">博客</a><a href="#">案例</a></div>
+        <div><h4>公司</h4><a href="#">关于我们</a><a href="#">加入我们</a><a href="#">联系方式</a><a href="#">隐私政策</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 云图科技 保留所有权利</span><span>沪ICP备 2026000000 号</span></div>
+    </div>
+  </footer>
+</body>
+</html>
