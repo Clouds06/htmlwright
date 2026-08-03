@@ -14,8 +14,10 @@ It doesn't generate pages from scratch — it makes **referenceable, verifiable,
 - **Quick edit (no AI)** — change text / color / font size directly at the source level, instant and free.
 - **AI edit** — Claude Code / Anthropic API / any OpenAI-compatible model (paste a key in the UI, no config files).
 - **Review before write** — code diff + before/after comparison + safety checks (collateral changes, overflow, overlap) before anything hits disk.
+- **You choose the scope** — no selection edits the whole file; click a spot and only that spot changes; multi-page docs can also target just the current page.
 - **Version timeline** — every accumulated change is clickable: replay that version and jump to the element it touched.
 - **Queue while generating** — submit several AI edits back to back without waiting; they apply serially.
+- **Multi-file sites too** — browse your machine and open any HTML from the UI; in view mode, click a local link on the page to jump straight into editing it, with one "Back" to return.
 - **Fully local** — auto-snapshot before write-back, undoable; nothing is uploaded.
 
 > Want to try it right now? After installing dependencies, run the bundled sample: `node dist/server/cli.js sample/landing.html` (build first with `npm run build`).
@@ -67,7 +69,7 @@ Daily flow, three steps: open the local HTML → click the extension icon → se
 
 ## Option B: Local command line
 
-No extension. Build once, then open any file in a local web page (same interaction as the side panel, plus before/after screenshots):
+No extension. Build once, then open a starting file in a local web page (same interaction as the side panel, plus before/after screenshots):
 
 ```bash
 cd htmlwright
@@ -75,13 +77,15 @@ npm run build                                   # build (first time / after upda
 node dist/server/cli.js /absolute/path/page.html   # open your file
 ```
 
+No need to go back to the terminal after launch: click **Open file** at the top-left to browse your machine and switch to another HTML; in view mode, clicking a local link on the page jumps straight into that page for editing, and **Back** returns to the previous one — handy for multi-file sites with cross-links.
+
 Common flags: `--port` sets the port; `--no-open` skips auto-opening the browser; `--in-place` writes the candidate immediately (a snapshot is still kept).
 
 ## Which one
 
 | | Option A (extension) | Option B (CLI) |
 |---|---|---|
-| Best for | frequent, iterative edits | quick one-off edits |
+| Best for | frequent, iterative edits | one-off edits, single file or a linked set |
 | After setup | mouse only | one command each time |
 | Screenshot comparison | checks summary only | full before/after screenshots |
 
