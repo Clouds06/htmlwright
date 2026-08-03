@@ -73,6 +73,8 @@ Daily flow, three steps: open the local HTML → click the extension icon → se
 
 No extension. Build once, then open a starting file in a local web page (same interaction as the side panel, plus before/after screenshots):
 
+![htmlwright local web workspace](./assets/screenshot-web.png)
+
 ```bash
 cd htmlwright
 npm run build                                   # build (first time / after updates)
