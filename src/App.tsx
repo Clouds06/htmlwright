@@ -75,6 +75,8 @@ export function App() {
   const [browse, setBrowse] = useState<{ dir: string; parent: string | null; dirs: Array<{ name: string; path: string }>; files: Array<{ name: string; path: string }> }>();
   const [fileHistory, setFileHistory] = useState<string[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const selectionModeRef = useRef(selectionMode);
+  useEffect(() => { selectionModeRef.current = selectionMode; }, [selectionMode]);
   const multiPage = units.length > 1;
 
   const refreshState = useCallback(async () => {
@@ -103,6 +105,9 @@ export function App() {
         setUnits(nextUnits);
         setActiveUnitIndex(current => current ?? nextUnits[0]?.index);
         setMode(event.data.mode === "unit" ? "unit" : "page");
+        // A freshly loaded preview defaults to select mode; re-assert the current mode
+        // now that the bridge is listening (avoids a race with the mode message).
+        iframeRef.current?.contentWindow?.postMessage({ type: "htmlwright:selection-mode", enabled: selectionModeRef.current }, "*");
       }
       if (event.data?.type === "htmlwright:selected") {
         setSelected(event.data.element);
