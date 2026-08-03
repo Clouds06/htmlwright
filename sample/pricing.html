@@ -33,8 +33,8 @@
     .block { padding: 56px 0 88px; }
     .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: start; }
     .plan { padding: 32px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
-    .plan.featured { border-color: var(--brand); box-shadow: 0 20px 44px rgba(79,70,229,.16); position: relative; }
-    .plan.featured .tag { position: absolute; top: -13px; left: 32px; background: var(--brand); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+    .plan.featured { border-color: var(--brand); background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; box-shadow: 0 20px 44px rgba(79,70,229,.16); position: relative; }
+    .plan.featured .tag { position: absolute; top: -13px; left: 32px; background: #fff; color: var(--brand); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
     .plan h3 { font-size: 18px; color: var(--muted); font-weight: 700; }
     .plan .price { font-size: 46px; font-weight: 850; margin: 10px 0 4px; }
     .plan .price span { font-size: 16px; font-weight: 500; color: var(--muted); }
@@ -42,6 +42,10 @@
     .plan ul { list-style: none; padding: 0; margin: 22px 0; }
     .plan li { padding: 8px 0 8px 26px; position: relative; font-size: 15px; color: #334155; border-top: 1px solid var(--line); }
     .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--brand); font-weight: 800; }
+    .plan.featured h3, .plan.featured .desc, .plan.featured .price span { color: rgba(255,255,255,.82); }
+    .plan.featured li { color: #fff; border-top-color: rgba(255,255,255,.26); }
+    .plan.featured li::before { color: #fff; }
+    .plan.featured .btn-primary { color: var(--brand); background: #fff; box-shadow: none; }
 
     .faq { max-width: 760px; margin: 72px auto 0; }
     .faq h2 { text-align: center; font-size: 30px; font-weight: 800; margin-bottom: 32px; }

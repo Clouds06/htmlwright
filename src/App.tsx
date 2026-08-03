@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle, ArrowLeft, ArrowUp, Check, CheckCircle2, ChevronDown, ChevronRight, Eye, FileCode2,
-  Focus, Folder, Layers, LoaderCircle, MousePointer2, PanelLeftClose, Plus, RefreshCw,
+  Focus, Folder, Layers, LoaderCircle, MousePointer2, PanelLeft, PanelLeftClose, Plus, RefreshCw,
   Send, Settings, ShieldCheck, Sparkles, Trash2, Undo2, Wand2, X, XCircle,
 } from "lucide-react";
 
@@ -78,6 +78,7 @@ export function App() {
   const [leftWidth, setLeftWidth] = useState(220);
   const [rightWidth, setRightWidth] = useState(390);
   const [isResizing, setIsResizing] = useState(false);
+  const [outlineCollapsed, setOutlineCollapsed] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const selectionModeRef = useRef(selectionMode);
   useEffect(() => { selectionModeRef.current = selectionMode; }, [selectionMode]);
@@ -325,9 +326,9 @@ export function App() {
 
       {state?.conflict && <div className="conflict-banner"><AlertCircle size={16} />原文件在外部发生变化，当前候选已暂停写回。请拒绝候选后重新加载。</div>}
 
-      <div className={`workspace ${isResizing ? "resizing" : ""}`} style={{ "--left": `${leftWidth}px`, "--right": `${rightWidth}px` } as React.CSSProperties}>
+      <div className={`workspace ${isResizing ? "resizing" : ""} ${outlineCollapsed ? "left-collapsed" : ""}`} style={{ "--left": outlineCollapsed ? "0px" : `${leftWidth}px`, "--right": `${rightWidth}px` } as React.CSSProperties}>
         <aside className="outline-panel">
-          <div className="panel-heading"><div><span className="eyebrow">DOCUMENT</span><h2>{mode === "unit" ? "内容单元" : "页面大纲"}</h2></div><PanelLeftClose size={17} /></div>
+          <div className="panel-heading"><div><span className="eyebrow">DOCUMENT</span><h2>{mode === "unit" ? "内容单元" : "页面大纲"}</h2></div><button className="icon-btn-sm" onClick={() => setOutlineCollapsed(true)} title="收起大纲"><PanelLeftClose size={17} /></button></div>
           <div className="unit-list">
             {units.length > 0 ? units.map(unit => (
               <button key={unit.index} className={`unit-row ${activeUnitIndex === unit.index ? "active" : ""}`} onClick={() => { setActiveUnitIndex(unit.index); iframeRef.current?.contentWindow?.postMessage({ type: "htmlwright:scroll-unit", index: unit.index }, "*"); }}>
@@ -338,15 +339,18 @@ export function App() {
           <div className="mode-note"><ShieldCheck size={15} /><span>{mode === "unit" ? "可检测非目标单元的意外变化" : "未识别到稳定单元结构，越界检测能力较弱"}</span></div>
         </aside>
 
-        <div className="col-resizer" onMouseDown={startResize("left")} title="拖动调整宽度" />
-
         <section className="preview-panel">
+          {!outlineCollapsed && <div className="col-resizer left" onMouseDown={startResize("left")} title="拖动调整宽度" />}
+          <div className="col-resizer right" onMouseDown={startResize("right")} title="拖动调整宽度" />
           <div className="workspace-toolbar">
+            <div className="tb-left">
+            {outlineCollapsed && <button className="icon-button" onClick={() => setOutlineCollapsed(false)} title="展开大纲"><PanelLeft size={16} /></button>}
             <div className="view-tabs">
               <button className={centerView === "preview" ? "active" : ""} onClick={() => { setViewingChange(undefined); setCenterView("preview"); }} title="当前效果，可点选元素编辑">预览</button>
               {([["before", "改动前", "改动前的原始样子"], ["diff", "代码差异", "改动的代码 diff"]] as const).map(([value, label, tip]) => (
                 <button key={value} disabled={!state?.pending} className={centerView === value ? "active" : ""} onClick={() => setCenterView(value)} title={tip}>{label}</button>
               ))}
+            </div>
             </div>
             {centerView === "preview" && (
               <div className="toolbar-right">
@@ -394,8 +398,6 @@ export function App() {
             <div className="checks-bar"><VerificationChecks verification={verification} /></div>
           )}
         </section>
-
-        <div className="col-resizer" onMouseDown={startResize("right")} title="拖动调整宽度" />
 
         <aside className="inspector-panel">
           <div className="model-bar">
