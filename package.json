@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "A local AI-native visual editor for single-file HTML documents.",
   "license": "MIT",
+  "author": "clouds <99071084+Clouds06@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clouds06/htmlwright.git"
+  },
+  "homepage": "https://github.com/Clouds06/htmlwright#readme",
+  "bugs": "https://github.com/Clouds06/htmlwright/issues",
   "type": "module",
   "bin": {
     "htmlwright": "dist/server/cli.js",
