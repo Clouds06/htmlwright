@@ -93,7 +93,7 @@ node dist/server/cli.js /绝对路径/page.html      # 打开你的文件
 
 htmlwright 本身不带模型，得接一个，三选一：
 
-1. **已经在用 Claude Code**（装了 `claude` 并登录过）：零配置，默认就走它。
+1. **已经在用 Claude Code**（装了 `claude` 并登录过）：零配置，默认就走它。（如果环境里设了 `ANTHROPIC_API_KEY`，会自动改走 Anthropic API，避免误用订阅额度。）
 2. **手上有 API Key**（OpenAI、OpenRouter、硅基流动、本地 Ollama 等）：点侧栏**模型**旁边的齿轮，填 API Key、Base URL、模型名，保存即可。**非技术用户推荐用这个。**
 3. **有 Anthropic 官方 Key**：设置好 `ANTHROPIC_API_KEY`，在界面里选 Anthropic API。
 

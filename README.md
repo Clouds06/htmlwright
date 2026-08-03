@@ -93,7 +93,7 @@ Common flags: `--port` sets the port; `--no-open` skips auto-opening the browser
 
 htmlwright ships no model of its own — connect one. Three options:
 
-1. **Already using Claude Code** (`claude` installed and signed in): zero config, enabled by default.
+1. **Already using Claude Code** (`claude` installed and signed in): zero config, enabled by default. (If `ANTHROPIC_API_KEY` is set in the environment, it automatically switches to the Anthropic API instead, so your subscription quota isn't used by mistake.)
 2. **Have an API key** (OpenAI / OpenRouter / SiliconFlow / local Ollama): click the gear next to **Model**, fill in the API key, base URL and model, save. **Recommended for non-technical users.**
 3. **Have an Anthropic key**: set `ANTHROPIC_API_KEY` and pick Anthropic API in the UI.
 
