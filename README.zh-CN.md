@@ -46,6 +46,8 @@
 
 在 Chrome 里打开本地 HTML，点一下扩展图标，就能在侧栏点选元素、描述改动，不用一直开着服务。
 
+![htmlwright 浏览器扩展侧栏](./assets/screenshot-extension.png)
+
 先装扩展和本机宿主。命令跑完会打印出**扩展目录**，下一步要用：
 
 ```bash

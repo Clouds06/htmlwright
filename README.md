@@ -46,6 +46,8 @@ A few one-time terminal commands; after that it's just the mouse.
 
 Open a local HTML file in Chrome, click the extension icon, select an element in the side panel and describe the change — no server to keep running.
 
+![htmlwright Chrome extension side panel](./assets/screenshot-extension.png)
+
 Install the extension, the native host, and record the AI backend path. The command prints an **extension directory** used in the next step:
 
 ```bash
