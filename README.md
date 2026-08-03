@@ -101,6 +101,10 @@ htmlwright ships no model of its own — connect one. Three options:
 
 > ⚠️ Choose a general-purpose or code model (DeepSeek-V3, Qwen-Coder, GPT-4o, Claude, …). Translation-only small models (names containing MT / Translation) won't return complete HTML and will fail with "no complete HTML".
 
+## About the visual safety check
+
+The automated check shown before write-back (did the target actually change, did it affect anything else, overflow, overlap) needs any one of **Chrome / Chromium / Edge / Brave** installed on your system — htmlwright finds and drives it automatically, no configuration needed. When none is found, this check is skipped with a notice, while **the code diff and the before/after preview still work and editing is unaffected**. Extension users have this by definition; the Edge that ships with Windows also works.
+
 ---
 
 # 2. Developer Guide

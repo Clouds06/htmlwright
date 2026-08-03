@@ -101,6 +101,10 @@ htmlwright 本身不带模型，得接一个，三选一：
 
 > ⚠️ 请选通用大模型或代码模型（如 DeepSeek-V3、Qwen-Coder、GPT-4o、Claude）。翻译专用小模型（名字带 MT / Translation）不会输出完整 HTML，会报 “no complete HTML”。
 
+## 关于视觉安全检查
+
+改前那条自动检查（目标是否真的变了、有没有连累别处、内容溢出、元素重叠）需要系统里装了 **Chrome / Chromium / Edge / Brave** 中的任意一个——htmlwright 会自动找到并调用它，无需手动配置。找不到时这条检查会自动跳过并给出提示，**代码 diff 与改前/改后预览照常可用，编辑流程不受影响**。用浏览器扩展的用户天然满足；Windows 自带的 Edge 也可用。
+
 ---
 
 # 二、开发者指南

@@ -24,6 +24,8 @@ export function configFilePath(): string {
   return path.join(homedir(), "Library", "Application Support", "htmlwright", "config.json");
 }
 
+const isMac = process.platform === "darwin";
+
 // Installed browsers to fall back to when the bundled Chromium is unavailable.
 export const chromeCandidates: string[] = isWindows
   ? [
@@ -32,12 +34,25 @@ export const chromeCandidates: string[] = isWindows
       path.join(localAppData(), "Google", "Chrome", "Application", "chrome.exe"),
       path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Microsoft", "Edge", "Application", "msedge.exe"),
       path.join(process.env["ProgramFiles"] || "C:\\Program Files", "Microsoft", "Edge", "Application", "msedge.exe"),
+      path.join(localAppData(), "BraveSoftware", "Brave-Browser", "Application", "brave.exe"),
+      path.join(process.env["ProgramFiles"] || "C:\\Program Files", "BraveSoftware", "Brave-Browser", "Application", "brave.exe"),
     ]
-  : [
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-      "/Applications/Chromium.app/Contents/MacOS/Chromium",
-      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    ];
+  : isMac
+    ? [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+      ]
+    : [
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/snap/bin/chromium",
+        "/usr/bin/microsoft-edge",
+        "/usr/bin/brave-browser",
+      ];
 
 export function openUrl(url: string): void {
   if (isWindows) spawn("cmd", ["/c", "start", "", url], { detached: true, stdio: "ignore" }).unref();
