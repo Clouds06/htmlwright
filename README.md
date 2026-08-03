@@ -73,7 +73,7 @@ Daily flow, three steps: open the local HTML → click the extension icon → se
 
 No extension. Build once, then open a starting file in a local web page (same interaction as the side panel, plus before/after screenshots):
 
-![htmlwright local web workspace](./assets/screenshot-web.png)
+![htmlwright launched from the CLI, showing the code-diff view with before/after comparison](./assets/screenshot-cli.png)
 
 ```bash
 cd htmlwright

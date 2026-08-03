@@ -73,7 +73,7 @@ npm run native:install
 
 不装扩展。先构建一次，再用本地网页打开一个起始文件（交互和侧栏跟扩展一致，还能看改前 / 改后截图）：
 
-![htmlwright 本地网页工作区](./assets/screenshot-web.png)
+![htmlwright 命令行启动后的代码差异视图，展示改前/改后对比](./assets/screenshot-cli.png)
 
 ```bash
 cd htmlwright
