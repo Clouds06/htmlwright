@@ -35,6 +35,7 @@ const openaiPresets = [
 ];
 let apiToken = "";
 let jobSeed = 0;
+const shortcutHint = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘↵" : "Ctrl+↵";
 
 function rgbToHex(value?: string): string | undefined {
   if (!value) return undefined;
@@ -74,6 +75,9 @@ export function App() {
   const [showFiles, setShowFiles] = useState(false);
   const [browse, setBrowse] = useState<{ dir: string; parent: string | null; dirs: Array<{ name: string; path: string }>; files: Array<{ name: string; path: string }> }>();
   const [fileHistory, setFileHistory] = useState<string[]>([]);
+  const [leftWidth, setLeftWidth] = useState(220);
+  const [rightWidth, setRightWidth] = useState(390);
+  const [isResizing, setIsResizing] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const selectionModeRef = useRef(selectionMode);
   useEffect(() => { selectionModeRef.current = selectionMode; }, [selectionMode]);
@@ -250,6 +254,25 @@ export function App() {
     }
   }, [fileHistory, refreshState]);
 
+  const startResize = useCallback((side: "left" | "right") => (event: React.MouseEvent) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startLeft = leftWidth;
+    const startRight = rightWidth;
+    setIsResizing(true);
+    const onMove = (moveEvent: MouseEvent) => {
+      if (side === "left") setLeftWidth(Math.min(480, Math.max(170, startLeft + (moveEvent.clientX - startX))));
+      else setRightWidth(Math.min(680, Math.max(300, startRight - (moveEvent.clientX - startX))));
+    };
+    const onUp = () => {
+      setIsResizing(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [leftWidth, rightWidth]);
+
   // Clicking a local .html link in the preview (view mode) opens it for editing.
   useEffect(() => {
     const listener = (event: MessageEvent) => {
@@ -302,7 +325,7 @@ export function App() {
 
       {state?.conflict && <div className="conflict-banner"><AlertCircle size={16} />原文件在外部发生变化，当前候选已暂停写回。请拒绝候选后重新加载。</div>}
 
-      <div className="workspace">
+      <div className={`workspace ${isResizing ? "resizing" : ""}`} style={{ "--left": `${leftWidth}px`, "--right": `${rightWidth}px` } as React.CSSProperties}>
         <aside className="outline-panel">
           <div className="panel-heading"><div><span className="eyebrow">DOCUMENT</span><h2>{mode === "unit" ? "内容单元" : "页面大纲"}</h2></div><PanelLeftClose size={17} /></div>
           <div className="unit-list">
@@ -314,6 +337,8 @@ export function App() {
           </div>
           <div className="mode-note"><ShieldCheck size={15} /><span>{mode === "unit" ? "可检测非目标单元的意外变化" : "未识别到稳定单元结构，越界检测能力较弱"}</span></div>
         </aside>
+
+        <div className="col-resizer" onMouseDown={startResize("left")} title="拖动调整宽度" />
 
         <section className="preview-panel">
           <div className="workspace-toolbar">
@@ -370,6 +395,8 @@ export function App() {
           )}
         </section>
 
+        <div className="col-resizer" onMouseDown={startResize("right")} title="拖动调整宽度" />
+
         <aside className="inspector-panel">
           <div className="model-bar">
             <span className="mb-label">模型</span>
@@ -412,7 +439,7 @@ export function App() {
               <button className="primary-button" disabled={!canEnqueue} onClick={enqueue}>
                 {running || queue.length > 0 ? <Plus size={17} /> : <Send size={17} />}
                 {running || queue.length > 0 ? "加入生成队列" : "生成候选改动"}
-                <span>⌘↵</span>
+                <span>{shortcutHint}</span>
               </button>
               {queue.length > 0 && (
                 <div className="gen-queue-wrap">
