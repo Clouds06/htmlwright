@@ -328,7 +328,7 @@ export function App() {
 
       <div className={`workspace ${isResizing ? "resizing" : ""} ${outlineCollapsed ? "left-collapsed" : ""}`} style={{ "--left": outlineCollapsed ? "0px" : `${leftWidth}px`, "--right": `${rightWidth}px` } as React.CSSProperties}>
         <aside className="outline-panel">
-          <div className="panel-heading"><div><span className="eyebrow">DOCUMENT</span><h2>{mode === "unit" ? "内容单元" : "页面大纲"}</h2></div><button className="icon-btn-sm" onClick={() => setOutlineCollapsed(true)} title="收起大纲"><PanelLeftClose size={17} /></button></div>
+          <div className="panel-heading"><h2>{mode === "unit" ? "内容单元" : "页面大纲"}</h2><button className="icon-btn-sm" onClick={() => setOutlineCollapsed(true)} title="收起大纲"><PanelLeftClose size={17} /></button></div>
           <div className="unit-list">
             {units.length > 0 ? units.map(unit => (
               <button key={unit.index} className={`unit-row ${activeUnitIndex === unit.index ? "active" : ""}`} onClick={() => { setActiveUnitIndex(unit.index); iframeRef.current?.contentWindow?.postMessage({ type: "htmlwright:scroll-unit", index: unit.index }, "*"); }}>
