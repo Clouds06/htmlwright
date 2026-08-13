@@ -312,7 +312,7 @@ export function App() {
   const scopeButtons: Scope[] = multiPage ? ["element", "page", "document"] : ["element", "document"];
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-candidate={state?.pending ? "true" : undefined}>
       <header className="topbar">
         <div className="brand"><span className="brand-mark"><Focus size={18} /></span><strong>htmlwright</strong></div>
         <div className="file-cell">
