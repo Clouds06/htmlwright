@@ -2,6 +2,8 @@
 
 *English · [简体中文](./README.zh-CN.md)*
 
+> **[Try the interactive demo →](https://clouds06.github.io/htmlwright/)** — runs entirely in your browser, with no file upload or model call.
+
 Click an element in a real browser, describe the change in one sentence. htmlwright shows a **code diff** and a **safety check** first (it screenshots before/after to confirm the target actually changed and nothing overflowed or shifted), and only writes back to the file once you approve.
 
 It doesn't generate pages from scratch — it makes **referenceable, verifiable, reversible** edits on an existing single-file HTML. Everything stays on your machine; the original is snapshotted before every write-back, so a bad edit is undoable.

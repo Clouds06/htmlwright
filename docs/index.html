@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="htmlwright：在真实页面点选元素，用自然语言精确修改已有 HTML。先审阅 Diff 和安全检查，再写回本地文件。">
+  <meta name="theme-color" content="#0b0b0c">
+  <meta property="og:title" content="htmlwright · 点选并修改已有 HTML">
+  <meta property="og:description" content="点选元素、描述改动、审阅 Diff 和安全检查，再写回本地文件。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clouds06.github.io/htmlwright/">
+  <link rel="canonical" href="https://clouds06.github.io/htmlwright/">
+  <title>htmlwright · 点选并修改已有 HTML</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="htmlwright 首页">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>htmlwright</span>
+    </a>
+    <nav aria-label="主导航">
+      <a href="#demo">在线演示</a>
+      <a href="#features">功能</a>
+      <a href="https://github.com/Clouds06/htmlwright#readme">安装</a>
+    </nav>
+    <a class="header-github" href="https://github.com/Clouds06/htmlwright" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2.23c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.74-1.55-2.58-.3-5.29-1.29-5.29-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.75.11 3.04.74.8 1.19 1.83 1.19 3.08 0 4.41-2.72 5.38-5.31 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z"/></svg>
+      GitHub
+    </a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <span class="pill"><i></i> 本地 · 开源 · 免费</span>
+        <h1>点一下，说一句，<br><span>HTML 就改好了</span></h1>
+        <p>不是重新生成整页，而是在真实页面上精确修改。<br>看清代码 Diff 和安全检查，确认后再写回本地文件。</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#demo">立即体验</a>
+          <a class="button button-secondary" href="https://github.com/Clouds06/htmlwright#一使用者指南" target="_blank" rel="noreferrer">查看安装指南 <span>↗</span></a>
+        </div>
+        <div class="hero-proof">
+          <span><b>01</b> 点选元素</span>
+          <i></i>
+          <span><b>02</b> 描述改动</span>
+          <i></i>
+          <span><b>03</b> 审阅写回</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="demo-section" id="demo">
+      <div class="section-heading">
+        <span class="eyebrow">INTERACTIVE DEMO</span>
+        <h2>现在就试一次局部修改</h2>
+        <p>点选左侧页面里的标题、正文或按钮，再从右侧描述你想怎么改。</p>
+      </div>
+
+      <div class="demo-note">
+        <span class="demo-dot"></span>
+        <strong>安全演示模式</strong>
+        <span>所有操作只发生在当前浏览器，不上传文件、不调用模型。</span>
+      </div>
+
+      <div class="app-window" aria-label="htmlwright 交互式产品演示">
+        <div class="app-topbar">
+          <div class="app-identity">
+            <span class="mini-mark"><i></i><i></i><i></i><i></i></span>
+            <strong>htmlwright</strong>
+          </div>
+          <div class="file-chip">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Zm0 0v6h6M8 13h8M8 17h5"/></svg>
+            landing.html
+            <span>⌄</span>
+          </div>
+          <span class="demo-badge">● 演示模式</span>
+        </div>
+
+        <div class="app-body">
+          <section class="preview-pane" aria-label="可点选的网页预览">
+            <div class="preview-toolbar">
+              <div class="view-tabs"><button class="active">预览</button><button id="before-tab" disabled>改动前</button><button id="diff-tab" disabled>代码差异</button></div>
+              <span>在页面中点选元素</span>
+            </div>
+
+            <div class="canvas-wrap">
+              <div class="sample-page" id="sample-page">
+                <nav class="sample-nav">
+                  <span class="sample-logo"><i></i>云图</span>
+                  <div><span>产品</span><span>方案</span><span>价格</span><span>客户</span></div>
+                  <button class="sample-nav-button" type="button">免费开始</button>
+                </nav>
+                <div class="sample-hero">
+                  <button class="editable selected" data-edit-key="eyebrow" type="button">全新 3.0 · 支持实时协作</button>
+                  <h3 class="editable" data-edit-key="title">让团队数据在同一个<br><em>画布上流动</em></h3>
+                  <p class="editable" data-edit-key="lead">云图把分散在表格、文档和看板里的数据连起来，实时同步、自动分析，让每个人都看到同一份真相。</p>
+                  <div class="sample-actions">
+                    <button class="editable sample-primary" data-edit-key="primary" type="button">免费试用 14 天</button>
+                    <button class="editable sample-secondary" data-edit-key="secondary" type="button">预约演示 →</button>
+                  </div>
+                  <div class="sample-board" aria-hidden="true">
+                    <div class="board-dots"><i></i><i></i><i></i></div>
+                    <div class="board-grid">
+                      <div><b>¥2.4M</b><span>本月营收</span></div>
+                      <div><b>18,204</b><span>活跃用户</span></div>
+                      <div><b>96.2%</b><span>任务准时率</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="diff-panel" id="diff-panel" hidden>
+                <div class="diff-head"><span class="removed-dot"></span> 删除 <span class="added-dot"></span> 新增</div>
+                <pre id="diff-code"></pre>
+              </div>
+            </div>
+
+            <div class="check-bar" id="check-bar">
+              <span><i>✓</i> 目标未变化</span>
+              <span><i>✓</i> 未发现跨单元改动</span>
+              <span><i>✓</i> 未发现内容溢出</span>
+              <span><i>✓</i> 未发现风险重叠</span>
+            </div>
+          </section>
+
+          <aside class="inspector" aria-label="修改控制面板">
+            <div class="model-row"><span>模型</span><button type="button">Demo Model <span>⌄</span></button></div>
+
+            <div class="selection-card">
+              <span class="element-icon" id="element-tag">span</span>
+              <div><strong id="selection-name">全新 3.0 · 支持实时协作</strong><small id="selection-path">header.hero › span.eyebrow</small></div>
+              <button class="locate" type="button" aria-label="定位元素">⌾</button>
+            </div>
+
+            <div class="edit-card">
+              <div class="card-title"><span>✦</span><strong>用 AI 改</strong><small>模拟</small></div>
+              <span class="field-label">应用到</span>
+              <div class="scope-control"><button class="active" type="button">这一处</button><button type="button" disabled>整个文件</button></div>
+              <p class="target-copy" id="target-copy">目标：header.hero › span.eyebrow</p>
+              <textarea id="intent" rows="3" aria-label="描述你想怎么改" placeholder="例如：文案改成「已支持实时协作」，颜色换成紫色"></textarea>
+              <div class="prompt-chips" aria-label="示例修改">
+                <button type="button" data-prompt="文案改成「已支持实时协作」，颜色换成紫色">换文案和颜色</button>
+                <button type="button" data-prompt="让它更醒目一点">更醒目</button>
+              </div>
+              <button class="generate-button" id="generate" type="button"><span>⌁</span> 生成候选改动</button>
+            </div>
+
+            <div class="review-card" id="review-card" hidden>
+              <div class="review-head"><strong>候选改动</strong><span>1 条</span></div>
+              <p id="change-summary">快速编辑：更新文字与颜色</p>
+              <button id="show-diff" type="button">查看代码 Diff <span>→</span></button>
+            </div>
+
+            <div class="inspector-spacer"></div>
+            <div class="inspector-actions">
+              <button class="reject-button" id="reject" type="button" disabled>× 拒绝</button>
+              <button class="undo-button" id="undo" type="button" disabled aria-label="撤销">↶</button>
+              <button class="accept-button" id="accept" type="button" disabled>✓ 接受并写回</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="section-heading light-heading">
+        <span class="eyebrow">WHY HTMLWRIGHT</span>
+        <h2>改的是这一处，不是重写一整页</h2>
+      </div>
+      <div class="feature-grid">
+        <article><span class="feature-number">01</span><div class="feature-icon">⌖</div><h3>点选即改</h3><p>直接在真实页面中定位元素，用自然语言描述目标。可按元素、当前页或整个文件控制范围。</p></article>
+        <article><span class="feature-number">02</span><div class="feature-icon">±</div><h3>改前先审</h3><p>候选改动不会直接落盘。先看代码 Diff、改动预览和安全检查，再决定接受或拒绝。</p></article>
+        <article><span class="feature-number">03</span><div class="feature-icon">↶</div><h3>随时回退</h3><p>每次写回前自动保存本地快照，版本时间线可以回放每一步并定位到改动元素。</p></article>
+      </div>
+    </section>
+
+    <section class="entry-section">
+      <div class="entry-copy">
+        <span class="eyebrow">TWO WAYS IN</span>
+        <h2>装好以后，<br>日常只用鼠标</h2>
+        <p>频繁修改用 Chrome 扩展；临时改单页或一组本地文件，用 CLI 启动完整工作区。</p>
+        <a class="button button-dark" href="https://github.com/Clouds06/htmlwright#一使用者指南" target="_blank" rel="noreferrer">阅读使用指南 <span>↗</span></a>
+      </div>
+      <div class="entry-cards">
+        <article>
+          <div><span class="entry-tag">推荐</span><span class="entry-index">A</span></div>
+          <h3>Chrome 扩展</h3><p>打开本地 HTML，点扩展图标，在侧栏选择元素并修改。无需常驻命令行服务。</p>
+          <span class="entry-meta">适合 · 日常反复编辑</span>
+        </article>
+        <article>
+          <div><span class="entry-tag ghost">完整工作区</span><span class="entry-index">B</span></div>
+          <h3>本地 CLI</h3><p>一条命令打开文件，获得完整预览、代码 Diff、视觉对比和多文件浏览。</p>
+          <span class="entry-meta">适合 · 临时改单页 / 一组文件</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <span class="pill dark-pill"><i></i> MIT LICENSE</span>
+      <h2>你的 HTML，始终由你确认</h2>
+      <p>开源、免费、本地优先。接入 Claude Code、Anthropic API 或任意 OpenAI 兼容模型。</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="https://github.com/Clouds06/htmlwright" target="_blank" rel="noreferrer">在 GitHub 查看源码 <span>↗</span></a>
+        <a class="button button-outline" href="https://github.com/Clouds06/htmlwright#方式-a浏览器扩展推荐" target="_blank" rel="noreferrer">安装 Chrome 扩展</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>htmlwright</span></a>
+    <p>Point. Describe. Review. Write back.</p>
+    <span>MIT © 2026 clouds</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./demo.js"></script>
+</body>
+</html>
